@@ -1,10 +1,11 @@
 [requires]
 glm/1.0.1
 sdl/[~2.28]
+glad/0.1.36
 
 [generators]
 CMakeDeps
 CMakeToolchain
 
-# [layout]
-# cmake_layout
+[layout]
+cmake_layout

@@ -5,3 +5,7 @@
 `cd build`
 
 `cmake .. --preset conan-release`
+
+`cd Release`
+
+`make`
