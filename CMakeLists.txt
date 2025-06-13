@@ -16,7 +16,7 @@ add_executable(${PROJECT_NAME}
     # src/InputHandler.cpp 
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE glad::glad glm::glm SDL2::SDL2)
+target_link_libraries(${PROJECT_NAME} PRIVATE glad::glad glm::glm SDL2::SDL2main SDL2::SDL2-static)
 
 # Environment specific settings
 # if(APPLE)
