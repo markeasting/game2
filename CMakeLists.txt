@@ -6,6 +6,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 # set(CMAKE_BUILD_TYPE DEBUG)
 
+# Set default build type to Release if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+# Add Debug build option
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Available build types" FORCE)
+
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
 find_package(glad REQUIRED)

@@ -1,8 +1,9 @@
 {
     // "cmake.buildDirectory": "${workspaceFolder}/debug",
     "clangd.arguments": [
-        "-background-index",
-        "-compile-commands-dir=build/Release"
+        "-pretty",
+        "--background-index",
+        "--compile-commands-dir=build/Debug"
     ],
     "files.associations": {
         "*.embeddedhtml": "html",
