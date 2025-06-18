@@ -18,7 +18,7 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Available build type
 # ---------------------------------- SOURCE ---------------------------------- #
 
 # Collect all .cpp files from the src directory
-file(GLOB SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+file(GLOB SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/game/src/*.cpp)
 
 # Create an executable target with the source files
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
@@ -42,6 +42,7 @@ find_package(glm REQUIRED)
 find_package(glad REQUIRED)
 
 # Link the executable with its dependencies
+# @todo these might be redundant if the engine already includes them
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     SDL2::SDL2main SDL2::SDL2-static
     glad::glad 
