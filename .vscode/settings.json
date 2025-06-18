@@ -1,9 +1,12 @@
 {
     // "cmake.buildDirectory": "${workspaceFolder}/debug",
+    // https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/cmake-settings.md#command-substitution
     "clangd.arguments": [
         "-pretty",
         "--background-index",
-        "--compile-commands-dir=build/Debug"
+        // https://github.com/microsoft/vscode-cmake-tools/issues/412
+        // "--compile-commands-dir=${workspaceFolder}/build/${buildType}", // use cmake build type?
+        "--compile-commands-dir=${workspaceFolder}/build/Debug",
     ],
     "files.associations": {
         "*.embeddedhtml": "html",
