@@ -1,7 +1,6 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#pragma once
 
-#include <SDL.h>
+#include <SDL2/SDL.h> 
 
 struct WindowConfig {
     const char* windowTitle = "MOI";
@@ -11,33 +10,21 @@ struct WindowConfig {
     bool vsync = true;
 };
 
-/**
- * @class Window
- * @brief Encapsulates SDL window creation and management.
- */
 class Window {
 public:
 
     WindowConfig m_config;
 
-    /**
-     * @brief Constructor to initialize the SDL window.
-     * @param title The title of the window.
-     * @param width The width of the window.
-     * @param height The height of the window.
-     */
-    Window(WindowConfig m_config);
+    SDL_Window* m_window;
 
-    /**
-     * @brief Destructor to clean up resources.
-     */
+    int m_windowWidth = 0;
+    int m_windowHeight = 0;
+    int m_frameBufferWidth = 0;
+    int m_frameBufferHeight = 0;
+
+    Window(WindowConfig config = {});
+
     ~Window();
-
-    /**
-     * @brief Gets the SDL window instance.
-     * @return Pointer to the SDL_Window.
-     */
-    SDL_Window* getSDLWindow() const;
 
     /**
      * @brief Gets the framebuffer width.
@@ -51,24 +38,6 @@ public:
      */
     int getFrameBufferHeight() const { return m_frameBufferHeight; }
 
-private:
+    void swapBuffers();     // @TODO inline these
 
-    /** Pointer to the SDL window. */
-    SDL_Window* m_window; 
-    
-    /** OpenGL context for the window. */
-    SDL_GLContext m_glContext; 
-
-    /** Framebuffer width */
-    int m_frameBufferWidth = 0;
-
-    /** Framebuffer height */
-    int m_frameBufferHeight = 0;
-
-    /**
-     * @brief Initializes the OpenGL context.
-     */
-    void initializeOpenGL();
 };
-
-#endif // WINDOW_H
