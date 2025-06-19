@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-#include "Window.h"
+#include "Window_new.h"
 #include "gfx/Renderer.h"
 #include "geom/TetrahedronGeometry.h"
 #include "geom/BoxGeometry.h"
@@ -20,19 +20,16 @@ int main() {
 
         Window window({
             .windowTitle = "MOIII",
-            .windowWidth = 1500,
-            .windowHeight = 1500,
+            .windowWidth = 500,
+            .windowHeight = 500,
             .fullscreen = false,
             .vsync = true
         });
 
         Renderer renderer = Renderer({
-            .wireframe = false,
+            .wireframe = true,
             .useRenderpass = true
         });
-
-        std::cout << window.getFrameBufferWidth() << "x" 
-                  << window.getFrameBufferHeight() << std::endl;
 
         renderer.setSize(
             window.getFrameBufferWidth(), // @todo make part of RendererConfig
@@ -41,7 +38,7 @@ int main() {
         
         auto camera = ref<Camera>();
 
-        // camera->m_autoRotate = true;
+        camera->m_autoRotate = true;
         camera->setSize(
             window.getFrameBufferWidth(),
             window.getFrameBufferHeight()
@@ -51,7 +48,7 @@ int main() {
             uniform("u_color", vec4(1.0f, 0.0f, 0.8f, 1.0f)),
         });
 
-        auto mesh = ref<Mesh>(TetrahedronGeometry(0.2f), colorMaterial);
+        auto mesh = ref<Mesh>(TetrahedronGeometry(1.0f), colorMaterial);
         mesh->setPosition({ 0.0f, 0.0f, 0.0f });
 
         auto line = ref<Mesh>(ArrowGeometry(), colorMaterial);
@@ -74,7 +71,7 @@ int main() {
         auto meshes = std::vector<Ref<Mesh>>();
         meshes.push_back(mesh);
         meshes.push_back(skybox);
-        // meshes.push_back(line);
+        meshes.push_back(line);
         // meshes.push_back(scene->m_tetra);
         // meshes.push_back(scene->m_skybox);
 
@@ -102,28 +99,8 @@ int main() {
                 if (e.type == SDL_QUIT) {
                     quit = true;
                 }
-
-                // switch (e.type) {
-                //     case SDL_KEYUP:
-                //     case SDL_KEYDOWN:
-                //         scene->onKey(e.key);
-                //         break;
-
-                //     case SDL_MOUSEBUTTONUP:
-                //     // case SDL_MOUSEBUTTONDOWN:
-                //         scene->onClick(e.button);
-                //         break;
-
-                //     case SDL_CONTROLLERBUTTONUP:
-                //         scene->onGamepadButton(e.cbutton);
-                //         break;
-                
-                //     default:
-                //         break;
-                // }
             }
 
-            // scene->update(time, 0.016f); 
             camera->update(time);
 
             // renderer.draw(scene, camera);
@@ -136,41 +113,6 @@ int main() {
         std::cerr << "Runtime error: " << e.what() << std::endl;
         return -1;
     }
-
-    // auto container = Container::instance();
-    
-    // Engine::CoreBundle::configure({
-    //     .window {
-    //         .windowTitle = "MOI",
-    //         .windowWidth = 640,
-    //         .windowHeight = 480,
-    //         .fullscreen = false,
-    //         .vsync = false,
-    //     },
-    //     .renderer {
-    //         .wireframe = false
-    //     },
-    // });
-
-    // Engine::SceneManagerBundle::configure();
-
-    // /* Game class */
-    // container->singleton<Game, Timer, Window, Renderer, SceneManager>();
-
-    // const auto game = container->resolve<Game>();
-
-    // /* @TODO should just have some generic 'race' scene where the map is loaded dynamically */
-    // // game->m_sceneManager.add("menu", ref<Menu>());
-    // game->m_sceneManager->add("playground", ref<PlayGround>());
-    // game->m_sceneManager->switchTo("playground");
-
-    // game->initialize();
-    
-    // while (game->isRunning()) {
-    //     game->update();
-    // }
-
-    // game->quit();
 
     return 0;
 }

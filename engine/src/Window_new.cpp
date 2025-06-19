@@ -85,7 +85,7 @@ void Window::initializeOpenGL() {
         throw std::runtime_error("[Window] Failed to initialize OpenGL context");
     }
     
-    fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+    // fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 #endif
 
     /* OpenGL initialized, continue */

@@ -5,6 +5,7 @@
 #include "gfx/Texture.h"
 #include "common/gl.h"
 
+#include <cstdio>
 #include <stdexcept>
 #include <string>
 
@@ -50,6 +51,8 @@ void Texture::load(const char* source) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, std::min(max_anisotropy, 16.0f));
 
     stbi_image_free(data);
+    
+    printf("[Texture] loaded texture: %s, size: %dx%d\n", source, width, height);
 
 }
 

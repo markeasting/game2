@@ -59,11 +59,6 @@ void Camera::update(float time) {
         if (state[SDL_SCANCODE_D])
             m_position += right * posDelta;
 
-        std::cout << "Camera position: " 
-                  << m_position.x << ", " 
-                  << m_position.y << ", " 
-                  << m_position.z << std::endl;
-
         int x, y;
         SDL_GetRelativeMouseState(&x, &y);
 
@@ -86,6 +81,11 @@ void Camera::update(float time) {
         // m_viewMatrix = glm::lookAt(m_position, m_position + front, up);
 
     }
+
+    // std::cout << "Camera position: " 
+    //             << m_position.x << ", " 
+    //             << m_position.y << ", " 
+    //             << m_position.z << std::endl;
     
     m_viewMatrix = glm::lookAt(m_position, m_lookAtPos, vec3(0.0, 1.0, 0.0));
     

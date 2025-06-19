@@ -1,11 +1,6 @@
 #pragma once
 
 #include <string>
-#include <unistd.h>
-
-#ifdef __APPLE__
-#include <mach-o/dyld.h>
-#endif
 
 class Filesystem {
 public:

@@ -59,7 +59,7 @@ GLuint Shader::createProgram() {
         return 0;
     }
 
-    // printf("[SUCCESS] Shader ID %u compiled.\n", program_id);
+    printf("[Shader] Shader %u compiled.\n", program_id);
 
     glDetachShader(program_id, vert);
     glDetachShader(program_id, frag);
@@ -87,7 +87,7 @@ GLuint Shader::compile(const std::string& shaderSource, unsigned int type) {
         char* message = (char*) malloc(length * sizeof(char));
         glGetShaderInfoLog(shaderId, length, &length, message);
 
-        printf("[ERROR] Could not compile shader: '%s'. \nOpenGL: %s", shaderSource.c_str(), message);
+        printf("[Shader] '%s': %s", shaderSource.c_str(), message);
         
         glDeleteShader(shaderId);
         
