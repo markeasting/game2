@@ -6,6 +6,7 @@ project(game VERSION 1.0)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 # set(CMAKE_BUILD_TYPE DEBUG)
+# set(CMAKE_OSX_ARCHITECTURES "arm64") # Apple Silicon support - might not be needed
 
 # Set default build type to Release if not specified
 if(NOT CMAKE_BUILD_TYPE)
@@ -39,13 +40,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE engine)
 # Find external dependencies
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
-find_package(glad REQUIRED)
+# find_package(glad REQUIRED)
 
 # Link the executable with its dependencies
 # @todo these might be redundant if the engine already includes them
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     SDL2::SDL2main SDL2::SDL2-static
-    glad::glad 
+    # glad::glad 
     glm::glm 
 )
 
