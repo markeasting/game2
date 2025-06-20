@@ -51,13 +51,11 @@ public:
     template <typename T>
     Ref<Uniform<T>> getUniform(const std::string& name) {
 
-        // if (uniforms.find(name) != uniforms.end()) {
-        //     return std::static_pointer_cast<Uniform<T>>(uniforms.at(name));
-        // } else {
-        //     throw std::runtime_error("[Material] Uniform not found: " + name);
-        // }
-        
-        return std::static_pointer_cast<Uniform<T>>(uniforms.at(name));
+        if (uniforms.find(name) != uniforms.end()) {
+            return std::static_pointer_cast<Uniform<T>>(uniforms.at(name));
+        } else {
+            throw std::runtime_error("[Material] Uniform not found: " + name);
+        }
     }
 
     void assignUniform(const std::string name, Ref<IUniform> uniform);
