@@ -28,14 +28,14 @@ private:
         }
 
         std::vector<Vertex> vertices {
-            Vertex(vec3(-x_dist, -y_dist, -z_dist)), // Front
-            Vertex(vec3( x_dist, -y_dist, -z_dist)), // Front
-            Vertex(vec3( x_dist,  y_dist, -z_dist)), // Front
-            Vertex(vec3(-x_dist,  y_dist, -z_dist)), // Front
-            Vertex(vec3( x_dist, -y_dist,  z_dist)), // Back
-            Vertex(vec3( x_dist,  y_dist,  z_dist)), // Back
-            Vertex(vec3(-x_dist,  y_dist,  z_dist)), // Back
-            Vertex(vec3(-x_dist, -y_dist,  z_dist)), // Back
+            Vertex(vec3(-x_dist, -y_dist, -z_dist), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f)), // Front
+            Vertex(vec3( x_dist, -y_dist, -z_dist), vec3(0.0f, 0.0f, -1.0f), vec2(1.0f, 0.0f)), // Front
+            Vertex(vec3( x_dist,  y_dist, -z_dist), vec3(0.0f, 0.0f, -1.0f), vec2(1.0f, 1.0f)), // Front
+            Vertex(vec3(-x_dist,  y_dist, -z_dist), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 1.0f)), // Front
+            Vertex(vec3( x_dist, -y_dist,  z_dist), vec3(0.0f, 0.0f,  1.0f), vec2(0.0f, 0.0f)), // Back
+            Vertex(vec3( x_dist,  y_dist,  z_dist), vec3(0.0f, 0.0f,  1.0f), vec2(1.0f, 0.0f)), // Back
+            Vertex(vec3(-x_dist,  y_dist,  z_dist), vec3(0.0f, 0.0f,  1.0f), vec2(1.0f, 1.0f)), // Back
+            Vertex(vec3(-x_dist, -y_dist,  z_dist), vec3(0.0f, 0.0f,  1.0f), vec2(0.0f, 1.0f)), // Back
         }; 
 
         std::vector<unsigned int> indices = {
