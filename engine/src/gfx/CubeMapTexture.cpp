@@ -1,14 +1,13 @@
-
 #include "gfx/CubeMapTexture.h"
 #include "util/Filesystem.h"
 
 #include <iostream>
 
-CubeMapTexture::CubeMapTexture(const std::vector<std::string>& faces) {
+CubeMapTexture::CubeMapTexture(const std::array<std::string, 6>& faces) {
     this->loadCubemap(faces);
 }
 
-void CubeMapTexture::loadCubemap(const std::vector<std::string>& faces) {
+void CubeMapTexture::loadCubemap(const std::array<std::string, 6>& faces) {
     
     auto &fs = Filesystem::instance();
 
