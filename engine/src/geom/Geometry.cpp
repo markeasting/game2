@@ -9,15 +9,16 @@ Geometry::Geometry() {
      * | XYZ PQR UV | XYZ PQR UV | XYZ PQR UV |
      */
     glGenVertexArrays(1, &m_vao);
+    
+    /* Bind VAO - required to properly assign BufferObjects in this VAO */
     glBindVertexArray(m_vao);
-
 }
 
-Geometry::Geometry(Ref<VertexBuffer> vbo, Ref<IndexBuffer> ibo) 
-    : Geometry() /* Delegate VAO creation to base constructor */
-{
-    this->setData(vbo, ibo);
-}
+// Geometry::Geometry(Ref<VertexBuffer> vbo, Ref<IndexBuffer> ibo) 
+//     : Geometry() /* Delegate VAO creation to base constructor */
+// {
+//     this->setData(vbo, ibo);
+// }
 
 Geometry::Geometry(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &indices) 
     : Geometry() /* Delegate VAO creation to base constructor */
@@ -75,7 +76,8 @@ Geometry::Geometry(const obj::Model &objModel)
 }
 
 void Geometry::setData(Ref<VertexBuffer> vbo, Ref<IndexBuffer> ibo) {
-    assert(m_vao != 0);
+    
+    bind(); // Make sure VAO is bound before setting buffers
 
     m_vertexBuffer = vbo;
     m_indexBuffer = ibo;

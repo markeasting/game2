@@ -16,6 +16,11 @@ struct Vertex {
 	
     ~Vertex() = default;
 
+    /**
+     * Sets vertex attribute pointers after creating a VAO. 
+     * uses `glVertexAttribPointer()` to set the stride and offsets 
+     * for the Vertex struct. 
+     */
     static void setAttribPointers();
 
 };
