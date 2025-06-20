@@ -11,12 +11,12 @@ uniform float u_opacity = 1.0;
 void main() {
 
 	vec4 textureColor = texture(texture1, uv);
-	FragColor = vec4(textureColor.rgb, textureColor.a * u_opacity);
+	// FragColor = vec4(textureColor.rgb, textureColor.a * u_opacity);
 
-	// FragColor = mix(
-	// 	texture(texture1, uv), 
-	// 	texture(texture2, uv), 
-	// 	0.5
-	// );
+	FragColor = mix(
+		texture(texture1, uv), 
+		texture(texture2, uv), 
+		0.5
+	);
 
 }
