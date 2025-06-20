@@ -1,5 +1,6 @@
 
 #include "gfx/CubeMapTexture.h"
+#include "util/Filesystem.h"
 
 #include <iostream>
 
@@ -8,15 +9,25 @@ CubeMapTexture::CubeMapTexture(const std::vector<std::string>& faces) {
 }
 
 void CubeMapTexture::loadCubemap(const std::vector<std::string>& faces) {
-    glGenTextures(1, &m_texture);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_texture);
+    
+    auto &fs = Filesystem::instance();
 
     // @TODO run this only once, this is also done in Texture...
     stbi_set_flip_vertically_on_load_thread(1);
+    
+    glGenTextures(1, &m_texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_texture);
 
     int width, height, nrChannels;
     for (unsigned int i = 0; i < faces.size(); i++) {
-        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        
+        unsigned char *data = stbi_load(
+            fs.resolveRelativePath(faces[i]).c_str(), 
+            &width, 
+            &height, 
+            &nrChannels,
+            0
+        );
         
         if (data) {
             glTexImage2D(

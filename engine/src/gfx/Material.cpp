@@ -57,8 +57,8 @@ void Material::assignTexture(
 
     /** @TODO this doesn't seem to work, most textures have alpha data but aren't actually transparent. */
     /** Maybe just set `transparent` manually. */
-    if (texture->m_format == GL_RGBA)
-        transparent = true;
+    // if (texture->m_format == GL_RGBA)
+    //     transparent = true;
 
     textures.push_back(texture);
 }
