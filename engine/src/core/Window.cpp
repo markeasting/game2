@@ -1,4 +1,4 @@
-#include "Window_new.h"
+#include "core/Window.h"
 
 #include "common/gl.h"
 

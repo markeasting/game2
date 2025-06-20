@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-#include "Window_new.h"
+#include "core/Window.h"
 #include "gfx/Renderer.h"
 #include "geom/TetrahedronGeometry.h"
 #include "geom/PlaneGeometry.h"
