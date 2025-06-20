@@ -54,3 +54,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # if(APPLE)
 #     target_link_libraries(${PROJECT_NAME} PRIVATE "-framework OpenGL")
 # endif()
+
+# Copy the 'assets' directory to the build output directory
+add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/game/assets
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
+    COMMENT "Copying assets directory to build output"
+)
