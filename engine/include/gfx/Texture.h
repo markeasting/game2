@@ -13,6 +13,7 @@ class Texture {
 public:
 
     Texture();
+    Texture(const char* source);
 
     void load(const char* source);
     virtual void bind() const;

@@ -10,6 +10,9 @@
 #include <string>
 
 Texture::Texture() {}
+Texture::Texture(const char* source) {
+    load(source);
+}
 
 void Texture::load(const char* source) {
 

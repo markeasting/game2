@@ -37,5 +37,10 @@ void Mesh::unbind() const {
 }
 
 void Mesh::setMaterial(const Material& material) {
-    m_material = std::make_shared<Material>(material);
+    setMaterial(ref<Material>(material));
+}
+
+void Mesh::setMaterial(Ref<Material> material) {
+    assert(material != nullptr);
+    m_material = material;
 }

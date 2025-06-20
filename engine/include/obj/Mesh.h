@@ -24,6 +24,8 @@ public:
     virtual ~Mesh() = default;
 
     void setMaterial(const Material& material);
+    void setMaterial(Ref<Material> material);
+    
     virtual void bind() const;
     virtual void unbind() const;
     
