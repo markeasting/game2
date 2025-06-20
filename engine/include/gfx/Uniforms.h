@@ -2,6 +2,7 @@
 
 #include "common/ref.h"
 #include <string>
+#include <iostream>
 
 class IUniform {
 public:
@@ -35,9 +36,8 @@ public:
         m_needsUpdate = true; 
         m_value = value;
     }
-    
-    void bind() override {};
 
+    void bind() override;
 };
 
 template <typename T>
