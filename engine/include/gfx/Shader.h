@@ -4,6 +4,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <cassert>
 
 class Shader {
 public:
@@ -29,5 +30,5 @@ private:
     std::unordered_map<std::string, int> uniformLocationCache = {};
 
     GLuint createProgram();
-    GLuint compile(const std::string& shaderSource, unsigned int type);
+    GLuint compile(const std::string& shaderSource, GLenum type);
 };

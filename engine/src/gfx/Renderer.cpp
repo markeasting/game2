@@ -24,21 +24,18 @@ Renderer::Renderer(RendererConfig config): m_config(config) {
     // glEnable(GL_STENCIL_TEST);
     // glStencilMask(0xFF); // Enable writing to the stencil buffer
 	// glStencilFunc(GL_EQUAL, 1, 0xFF);
-	// glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // Default, see docs for custom behavior
+    // glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // Default behavior
 
-    std::vector<Vertex> geometry {
-        Vertex(vec3(  1, -1, 0 ), vec3( 0, 0, 1 ), vec2( 1, 0 )),
-        Vertex(vec3(  1,  1, 0 ), vec3( 0, 0, 1 ), vec2( 1, 1 )),
-        Vertex(vec3( -1, -1, 0 ), vec3( 0, 0, 1 ), vec2( 0, 0 )),
-        Vertex(vec3( -1,  1, 0 ), vec3( 0, 0, 1 ), vec2( 0, 1 )),
-    };
-
-    std::vector<unsigned int> indices = {
-        0, 1, 2,
-        2, 1, 3,
-    };
-
-    m_fullscreenQuad.m_geometry = ref<Geometry>(geometry, indices);
+    /* Quad for the render pass */
+    m_fullscreenQuad.m_geometry = ref<Geometry>(
+        std::vector<Vertex>{
+            { vec3(  1, -1, 0 ), vec3( 0, 0, 1 ), vec2( 1, 0 ) },
+            { vec3(  1,  1, 0 ), vec3( 0, 0, 1 ), vec2( 1, 1 ) },
+            { vec3( -1, -1, 0 ), vec3( 0, 0, 1 ), vec2( 0, 0 ) },
+            { vec3( -1,  1, 0 ), vec3( 0, 0, 1 ), vec2( 0, 1 ) },
+        },
+        std::vector<unsigned int>{ 0, 1, 2, 2, 1, 3 }
+    );
 
     // @TODO move uniform settings to Shader? Then we don't need a material here
     m_fullscreenQuad.setMaterial(m_screenShader);

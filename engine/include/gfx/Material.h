@@ -4,6 +4,7 @@
 #include "gfx/Uniforms.h"
 #include "gfx/Texture.h"
 
+#include <stdexcept>
 #include <vector>
 
 class Material {
@@ -20,13 +21,13 @@ public:
 
     Material(
         const std::string& shaderBasePath, 
-        std::vector<Ref<IUniform>> uniforms = {}
+        std::unordered_map<std::string, Ref<IUniform>> uniforms = {}
     );
     
     Material(
         const std::string& vert, 
         const std::string& frag, 
-        std::vector<Ref<IUniform>> uniforms = {}
+        std::unordered_map<std::string, Ref<IUniform>> uniforms = {}
     );
 
     ~Material() = default;
@@ -34,12 +35,11 @@ public:
     template <typename T>
     void setUniform(const std::string& name, T value) {
 
-        // @TODO cache find() indices
-        if (uniforms.find(name) != uniforms.end()) {
-            auto uni = std::static_pointer_cast<Uniform<T>>(uniforms.at(name));
+        try {
+            auto uni = getUniform<T>(name);
             uni->set(value);
-        } else {
-            assignUniform(ref<Uniform<T>>(name, value));
+        } catch (const std::runtime_error& e) {
+            assignUniform(name, ref<Uniform<T>>(value));
         }
     }
 
@@ -49,11 +49,11 @@ public:
         if (uniforms.find(name) != uniforms.end()) {
             return std::static_pointer_cast<Uniform<T>>(uniforms.at(name));
         } else {
-            throw std::runtime_error("uniform not found: " + name);
+            throw std::runtime_error("[Material] Uniform not found: " + name);
         }
     }
 
-    void assignUniform(Ref<IUniform> uniform);
+    void assignUniform(const std::string name, Ref<IUniform> uniform);
     
     void assignTexture(
         Ref<Texture> texture, 

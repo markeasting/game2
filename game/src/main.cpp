@@ -5,6 +5,7 @@
 #include "Window_new.h"
 #include "gfx/Renderer.h"
 #include "geom/TetrahedronGeometry.h"
+#include "geom/PlaneGeometry.h"
 #include "geom/BoxGeometry.h"
 #include "geom/ArrowGeometry.h"
 #include "gfx/CubeMapTexture.h"
@@ -27,7 +28,7 @@ int main() {
         });
 
         Renderer renderer = Renderer({
-            .wireframe = true,
+            .wireframe = false,
             .useRenderpass = true
         });
 
@@ -45,17 +46,20 @@ int main() {
         );
         
         auto colorMaterial = Material("Color", {
-            uniform("u_color", vec4(1.0f, 0.0f, 0.8f, 1.0f)),
+            { "u_color", uniform(vec4(1.0f, 0.0f, 0.8f, 1.0f)) },
         });
+
+        auto textureMaterial = Material("Basic.vert", "BasicTextured.frag");
+        textureMaterial.assignTexture("assets/texture/default.jpg", "texture1");
+        textureMaterial.assignTexture("assets/texture/uv_test.jpg", "texture2");
 
         auto mesh = ref<Mesh>(TetrahedronGeometry(1.0f), colorMaterial);
         mesh->setPosition({ 0.0f, 0.0f, 0.0f });
 
-        auto line = ref<Mesh>(ArrowGeometry(), colorMaterial);
+        auto box = ref<Mesh>(BoxGeometry(), textureMaterial);
+        box->setPosition({ 0.0f, 0.0f, -2.0f });
 
-        Material skyMaterial = Material("SkyBox", {
-            uniform("u_color", vec4(0.0f, 0.0f, 0.8f, 1.0f)),
-        });
+        Material skyMaterial = Material("SkyBox");
         Ref<CubeMapTexture> skyTexture = ref<CubeMapTexture>();
         skyTexture->loadCubemap({
             "assets/texture/skybox/right.jpg",
@@ -68,12 +72,11 @@ int main() {
         skyMaterial.assignTexture(skyTexture, "texture1");
         auto skybox = ref<Mesh>(BoxGeometry(1.0f, true), skyMaterial);
 
-        auto meshes = std::vector<Ref<Mesh>>();
-        meshes.push_back(mesh);
-        meshes.push_back(skybox);
-        meshes.push_back(line);
-        // meshes.push_back(scene->m_tetra);
-        // meshes.push_back(scene->m_skybox);
+        auto meshes = std::vector<Ref<Mesh>>({
+            mesh,
+            box,
+            skybox
+        });
 
         /* Event loop */
         bool quit = false;
@@ -82,8 +85,6 @@ int main() {
         while (!quit) {
         
             float time = SDL_GetTicks() / 1000.0f;
-            
-            // std::cout << "Time: " << time << " seconds" << std::endl;
             
             while (SDL_PollEvent(&e)) {
                 if (e.type == SDL_KEYDOWN) {
@@ -100,6 +101,9 @@ int main() {
                     quit = true;
                 }
             }
+
+            float osc = sin(time * 1.5f) / 2.0f + 0.5f;
+            colorMaterial.setUniform("u_color", vec4(0.0f, osc, 0.8f, 1.0f));
 
             camera->update(time);
 

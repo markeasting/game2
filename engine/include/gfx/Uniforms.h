@@ -7,14 +7,17 @@
 class IUniform {
 public:
 
-    std::string m_name;
+    // std::string m_name;
     int m_location = -1;
     int m_value = -1;
 
-    IUniform(const std::string& name)
-        : m_name(name) {};
+    IUniform() {};
 
     virtual ~IUniform() = default;
+
+    void setLocation(int location) {
+        m_location = location;
+    }
 
     virtual void set() {};
     virtual void bind() {};
@@ -29,8 +32,8 @@ public:
 
     T m_value;
 
-    Uniform(const std::string& name, T value = {}) 
-        : IUniform(name), m_value(value) {}
+    Uniform(T value = {}) 
+        : IUniform(), m_value(value) {}
 
     void set(T value) { 
         m_needsUpdate = true; 
@@ -41,6 +44,6 @@ public:
 };
 
 template <typename T>
-Ref<Uniform<T>> uniform(const std::string& name, T value = {}) {
-    return ref<Uniform<T>>(name, value);
+Ref<Uniform<T>> uniform(T value = {}) {
+    return ref<Uniform<T>>(value);
 }
