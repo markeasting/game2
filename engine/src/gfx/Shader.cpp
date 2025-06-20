@@ -6,23 +6,16 @@ Shader::Shader() {}
 
 Shader::Shader(
     const std::string& vertexShader, 
-    const std::string& fragmentShader, 
-    bool autoCompile
+    const std::string& fragmentShader
+    // bool autoCompile
 ) : m_vertexShaderPath(vertexShader), m_fragmentShaderPath(fragmentShader) {
-    if (autoCompile)
-        m_program = createProgram();
+    m_program = createProgram();
 }
 
 Shader::Shader(
-    const std::string& shaderName, 
-    bool autoCompile
-) {
-    m_vertexShaderPath = shaderName + ".vert";
-    m_fragmentShaderPath = shaderName + ".frag";
-
-    if (autoCompile)
-        m_program = createProgram();
-}
+    const std::string& shaderName
+    // bool autoCompile
+) : Shader(shaderName + ".vert", shaderName + ".frag") {}
 
 Shader::~Shader() {
     glDeleteProgram(m_program);
@@ -38,13 +31,20 @@ GLuint Shader::createProgram() {
     }
 
     GLuint program_id = glCreateProgram();
+
     glAttachShader(program_id, vert);
     glAttachShader(program_id, frag);
+    
     glLinkProgram(program_id);
     glValidateProgram(program_id);
+
+    /* Clean up vert/frag partials - maybe keep these during 'init' to speed up compilation */
     glDeleteShader(vert);
     glDeleteShader(frag);
+    glDetachShader(program_id, vert);
+    glDetachShader(program_id, frag);
 
+    /* Check if shader linked successfully */
     int program_linked = 0;
     glGetProgramiv(program_id, GL_LINK_STATUS, &program_linked);
 
@@ -58,16 +58,11 @@ GLuint Shader::createProgram() {
         printf("[ERROR] Shader linking error: %s\n", message);
 
         glDeleteProgram(program_id);
-        glDeleteShader(vert);
-        glDeleteShader(frag);
 
         return 0;
     }
 
     printf("[Shader] Shader %u compiled.\n", program_id);
-
-    glDetachShader(program_id, vert);
-    glDetachShader(program_id, frag);
 
     return program_id;
 }
@@ -77,6 +72,7 @@ GLuint Shader::compile(
     GLenum type
 ) {
 
+    /* @todo maybe store/cache shaders */
     Filesystem &fs = Filesystem::instance();
     std::string shader_str = fs.getFileContents(shaderSource);
 
@@ -106,13 +102,13 @@ GLuint Shader::compile(
 }
 
 
-int Shader::getUniformLocation(const std::string& name) {
+GLint Shader::getUniformLocation(const std::string& name) {
 
     if (uniformLocationCache.find(name) == uniformLocationCache.end()) {
         
         glUseProgram(m_program);
         
-        int location = glGetUniformLocation(m_program, name.c_str());
+        GLint location = glGetUniformLocation(m_program, name.c_str());
         
         // std::cout << name << std::endl;
         // assert(location != -1);

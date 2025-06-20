@@ -1,5 +1,6 @@
 
 #include "gfx/Renderer.h"
+#include "gfx/Material.h"
 
 Renderer::Renderer(RendererConfig config): m_config(config) {
     
@@ -37,9 +38,11 @@ Renderer::Renderer(RendererConfig config): m_config(config) {
         std::vector<unsigned int>{ 0, 1, 2, 2, 1, 3 }
     );
 
-    // @TODO move uniform settings to Shader? Then we don't need a material here
-    m_fullscreenQuad.setMaterial(m_screenShader);
+    auto renderPassShader = ref<Shader>("Basic.vert", "Renderpass.frag");
 
+    m_fullscreenQuad.setMaterial(Material(renderPassShader, {
+        { "u_color", uniform(vec4(1.0f, 0.0f, 0.8f, 1.0f)) },
+    }));
 }
 
 void Renderer::setSize(int width, int height) {

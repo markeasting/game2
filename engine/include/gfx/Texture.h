@@ -18,6 +18,10 @@ public:
     void load(const char* source);
     virtual void bind() const;
 
+    GLuint getTexture() const {
+        return m_texture;
+    }
+
 protected:
 
     GLuint m_texture = 0;

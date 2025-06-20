@@ -4,6 +4,7 @@
 #include "common/gl.h"
 
 #include "obj/Mesh.h"
+#include "gfx/Shader.h"
 
 // #include "scene/Scene.h"
 #include "core/Camera.h"
@@ -35,10 +36,6 @@ private:
 	 * @todo make FullSceenQuad class for other render passes
 	 */
 	Mesh m_fullscreenQuad;
-
-	// std::vector<Ref<Mesh>> m_meshes = {};
-    // Material m_defaultShader = { "Basic" };
-    Material m_screenShader = { "Basic.vert", "Renderpass.frag" };
 	
 };
 

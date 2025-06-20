@@ -39,17 +39,23 @@ int main() {
         
         auto camera = ref<Camera>();
 
-        camera->m_autoRotate = true;
+        // camera->m_autoRotate = true;
         camera->setSize(
             window.getFrameBufferWidth(),
             window.getFrameBufferHeight()
         );
+
+        auto colorShader = ref<Shader>("Color");
+
+        auto colorMaterial = Material(colorShader, {
+            { "u_color", uniform(vec4(0.0f, 1.0f, 0.2f, 1.0f)) },
+        });
         
-        auto colorMaterial = Material("Color", {
+        auto colorMaterial2 = Material(colorShader, {
             { "u_color", uniform(vec4(1.0f, 0.0f, 0.8f, 1.0f)) },
         });
 
-        auto textureMaterial = Material("Basic.vert", "BasicTextured.frag");
+        auto textureMaterial = Material(ref<Shader>("Basic.vert", "BasicTextured.frag"));
         textureMaterial.assignTexture("assets/texture/default.jpg", "texture1");
         textureMaterial.assignTexture("assets/texture/uv_test.jpg", "texture2");
 
@@ -59,7 +65,7 @@ int main() {
         auto box = ref<Mesh>(BoxGeometry(), textureMaterial);
         box->setPosition({ 0.0f, 0.0f, -2.0f });
 
-        Material skyMaterial = Material("SkyBox");
+        Material skyMaterial = Material(ref<Shader>("SkyBox"));
         Ref<CubeMapTexture> skyTexture = ref<CubeMapTexture>();
         skyTexture->loadCubemap({
             "assets/texture/skybox/right.jpg",

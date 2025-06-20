@@ -1,37 +1,34 @@
 
 #include "gfx/Material.h"
+#include "gfx/Shader.h"
 
 #include <string>
 #include <cassert>
 
 Material::Material(
-    const std::string& shaderBasePath, 
+    Ref<Shader> shader, 
     std::unordered_map<std::string, Ref<IUniform>> uniforms
 ) {
-    m_shader = ref<Shader>(shaderBasePath);
+    m_shader = shader;
 
     assert(m_shader != nullptr);
-    // assert(m_shader->m_program != 0);
+    assert(m_shader->m_program != 0);
 
     for (const auto &[key, uniform] : uniforms) {
         assignUniform(key, uniform);
     }
 }
 
-Material::Material(
-    const std::string& vert, 
-    const std::string& frag, 
-    std::unordered_map<std::string, Ref<IUniform>> uniforms
-) {
-    m_shader = ref<Shader>(vert, frag);
+// Material::Material(
+//     const std::string& shaderBasePath, 
+//     std::unordered_map<std::string, Ref<IUniform>> uniforms
+// ) : Material(ref<Shader>(shaderBasePath), uniforms) {}
 
-    assert(m_shader != nullptr);
-    // assert(m_shader->m_program != 0);
-
-    for (const auto &[key, uniform] : uniforms) {
-        assignUniform(key, uniform);
-    }
-}
+// Material::Material(
+//     const std::string& vert, 
+//     const std::string& frag, 
+//     std::unordered_map<std::string, Ref<IUniform>> uniforms
+// ) : Material(ref<Shader>(vert, frag), uniforms) {}
 
 void Material::assignUniform(
     const std::string name, 
@@ -40,13 +37,19 @@ void Material::assignUniform(
 
     assert(uniform != nullptr);
 
-    if (uniforms[name] != nullptr) {
+    if (uniforms.find(name) != uniforms.end()) {
         throw std::runtime_error("[Material] Uniform already exists: " + name);
         return;
     }
 
-    uniform->setLocation(m_shader->getUniformLocation(name));
-    uniforms[name] = uniform;
+    GLint location = m_shader->getUniformLocation(name);
+    
+    // if (location == -1) {
+    //     throw std::runtime_error("[Material] Uniform location not found: " + name);
+    // }
+
+    uniform->setLocation(location);
+    uniforms[name] = uniform; //uniforms.try_emplace(name, uniform);
 }
 
 void Material::assignTexture(
@@ -75,12 +78,10 @@ void Material::assignTexture(
 
 void Material::bind() const {
 
-    m_shader->bind();
-    // glUseProgram(m_shader->m_program);
+    m_shader->bind(); // glUseProgram()
 
     for (int i = 0; i < textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + i); // @todo is this needed? Move to Texture::bind()?
-        // glBindTexture(GL_TEXTURE_2D, textures[i]->m_texture);
+        glActiveTexture(GL_TEXTURE0 + i); // @todo move to bind()?
         textures[i]->bind();
     }
 
