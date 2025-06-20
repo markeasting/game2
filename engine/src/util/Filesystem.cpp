@@ -13,6 +13,8 @@
 #include <Windows.h>
 #endif
 
+#include <iostream>
+
 Filesystem::Filesystem() {
     basePath = Filesystem::getBasePath();
 }
@@ -76,12 +78,18 @@ std::string Filesystem::getBasePath() {
 
     #endif
 
-    // Make relative
-    // std::string::size_type i = path.find(executable);
-    // if (i != std::string::npos)
-    //     path.erase(i, executable.length());
+    // the path contains the executable name, so we need to remove it
+    // it can be any name, just remove the last part after the last slash
+    size_t lastSlash = path.find_last_of("/\\");
+    if (lastSlash != std::string::npos) {
+        path = path.substr(0, lastSlash + 1); // include the slash
+    } else {
+        // if no slash is found, we assume the path is just the current directory
+        path = "./";
+    }
 
-    path = path.substr(0, path.find_last_of("/\\")); // Make relative
+    // log 
+    std::cout << "[Filesystem] base path: " << path << std::endl;
 
     return path;
 }
@@ -94,7 +102,7 @@ std::string Filesystem::getFileContents(const std::string& relativePath) {
     
     if (!stream.is_open()) {
         throw std::runtime_error(
-            std::string("[Filesystem] file could not be opened: ") + relativePath
+            std::string("[Filesystem] file could not be opened: ") + basePath + relativePath
         );
     }
 

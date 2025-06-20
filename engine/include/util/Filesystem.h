@@ -16,6 +16,10 @@ public:
 
 	std::string getFileContents(const std::string& relativePath);
 
+	std::string resolveRelativePath(const std::string& relativePath) {
+		return basePath + relativePath;
+	}
+
 private:
 
 	Filesystem();
