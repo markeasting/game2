@@ -28,7 +28,14 @@ public:
 
     void init();
     
-    void update(float dt, std::function<void(float)> customUpdate);
+    void update(float dt);
+
+    /**
+     * Update method that allows for custom update logic.
+     * @param dt Delta time since last update.
+     * @param onSubstep Callback that receives a substep interval (h)
+     */
+    void update(float dt, std::function<void(float)> onSubstep);
 
     RaycastInfo raycast(const vec3& ray_origin, const vec3& ray_dir) const;
 

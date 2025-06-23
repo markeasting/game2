@@ -61,23 +61,32 @@ void Constraint::solvePos(float h) {
     this->updateGlobalPoses();
 
     // @TODO generalize creating C (constraint error) and it's normal
-    const vec3 corr = m_globalPose1.p - m_globalPose0.p;
+    const vec3 dx = m_globalPose1.p - m_globalPose0.p;
     
-    if (glm::length(corr) < 0.0001f)
+    if (glm::length(dx) < 0.0001f)
         return;
 
-    m_normal = glm::normalize(corr);
+    m_normal = glm::normalize(dx);
 
-    m_lambda = XPBDSolver::applyBodyPairCorrection(
+    auto [dlambda, corr] = XPBDSolver::findLagrangeMultiplier(
         m_body0.get(),
         m_body1.get(),
-        corr,
+        dx,
         m_compliance,
         h,
         m_globalPose0.p,
         m_globalPose1.p
     );
 
+    m_lambda = dlambda;
+
+    XPBDSolver::applyBodyPairCorrection(
+        m_body0.get(),
+        m_body1.get(),
+        corr,
+        m_globalPose0.p,
+        m_globalPose1.p
+    );
 }
 
 void Constraint::solveVel(float h) {
@@ -92,12 +101,20 @@ void Constraint::solveVel(float h) {
 
         omega *= std::min(1.0f, m_rotDamping * h);
 
-        XPBDSolver::applyBodyPairCorrection(
+        auto [dlambda, corr] = XPBDSolver::findLagrangeMultiplier(
             m_body0.get(),
             m_body1.get(),
             omega,
             0.0f,
             h,
+            vec3(0),
+            vec3(0)
+        );
+
+        XPBDSolver::applyBodyPairCorrection(
+            m_body0.get(),
+            m_body1.get(),
+            corr,
             vec3(0),
             vec3(0),
             true
@@ -116,12 +133,20 @@ void Constraint::solveVel(float h) {
 
         vel *= std::min(1.0f, m_posDamping * h);
 
-        XPBDSolver::applyBodyPairCorrection(
+        auto[dlambda, corr] = XPBDSolver::findLagrangeMultiplier(
             m_body0.get(), 
             m_body1.get(), 
             vel,
             0.0f,
             h,
+            m_globalPose0.p, 
+            m_globalPose1.p
+        );
+
+        XPBDSolver::applyBodyPairCorrection(
+            m_body0.get(), 
+            m_body1.get(), 
+            corr,
             m_globalPose0.p, 
             m_globalPose1.p, 
             true

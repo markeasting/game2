@@ -63,7 +63,6 @@ void MeshCollider::setGeometry(Ref<Geometry> geometry) {
             }
         }
 
-        /* @TODO combine with the loop above */
         /* Note: looks a lot like updateGlobalPose */
         for (size_t i = 0; i < m_indices.size(); i += 3) {
             std::array<vec3, 4> tri;

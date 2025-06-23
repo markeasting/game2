@@ -1,4 +1,5 @@
 
+#include <tuple>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/intersect.hpp>
 
@@ -27,7 +28,12 @@ void XPBDSolver::init() {
     XPBDSolver::debugArrow = ref<Mesh>(ArrowGeometry(1.0f), colorMaterial);
 }
 
-void XPBDSolver::update(const std::vector<Ref<RigidBody>>& bodies, const std::vector<Ref<Constraint>>& constraints, std::function<void(float)> customUpdate, const float dt) {
+void XPBDSolver::update(
+    const std::vector<Ref<RigidBody>>& bodies,
+    const std::vector<Ref<Constraint>>& constraints,
+    const float dt,
+    std::function<void(float)> onSubstep
+) {
 
     /* XPBD algorithm 2 */
 
@@ -43,10 +49,10 @@ void XPBDSolver::update(const std::vector<Ref<RigidBody>>& bodies, const std::ve
         return;
     }
 
-    const float h = dt / XPBDSolver::numSubSteps;
-    // const float h = (1.0f / 60.0f) / XPBDSolver::numSubSteps;
+    const float h = dt / XPBDSolver::NUM_SUB_STEPS;
+    // const float h = (1.0f / 60.0f) / XPBDSolver::NUM_SUB_STEPS;
 
-    for (int i = 0; i < XPBDSolver::numSubSteps; i++) {
+    for (int i = 0; i < XPBDSolver::NUM_SUB_STEPS; i++) {
 
         /* (3.5)
          * At each substep we iterate through the pairs
@@ -70,7 +76,7 @@ void XPBDSolver::update(const std::vector<Ref<RigidBody>>& bodies, const std::ve
 
         XPBDSolver::solveVelocities(contacts, h);
 
-        customUpdate(h);
+        onSubstep(h);
 
     }
 
@@ -311,8 +317,10 @@ std::vector<Ref<ContactSet>> XPBDSolver::getContacts(const std::vector<Collision
     return contacts;
 }
 
-void XPBDSolver::solvePositions(const std::vector<Ref<ContactSet>>& contacts, const float h) {
-
+void XPBDSolver::solvePositions(
+    const std::vector<Ref<ContactSet>>& contacts,
+    const float h
+) {
     /* (3.5) Handling contacts and friction */
     
     for (auto const& contact: contacts) {
@@ -321,9 +329,12 @@ void XPBDSolver::solvePositions(const std::vector<Ref<ContactSet>>& contacts, co
     }
 }
 
-void XPBDSolver::_solvePenetration(Ref<ContactSet> contact, const float h) {
+void XPBDSolver::_solvePenetration(
+    Ref<ContactSet> contact,
+    const float h
+) {
 
-    /* (26) - p1, p2 and penetration depth (d) are calculated here. */
+    /* (26) contact->update() calculates p1, p2 and penetration depth (d). */
     contact->update();
 
     /* (3.5) if d ≤ 0 we skip the contact */
@@ -333,12 +344,20 @@ void XPBDSolver::_solvePenetration(Ref<ContactSet> contact, const float h) {
     /* (3.5) Resolve penetration (Δx = dn using a = 0 and λn) */
     const vec3 dx = contact->d * contact->n;
 
-    float delta_lambda = XPBDSolver::applyBodyPairCorrection(
+    auto [delta_lambda, corr] = XPBDSolver::findLagrangeMultiplier(
         contact->A,
         contact->B,
         dx,
         0.0f,
         h,
+        contact->p1,
+        contact->p2
+    );
+
+    XPBDSolver::applyBodyPairCorrection(
+        contact->A,
+        contact->B,
+        corr,
         contact->p1,
         contact->p2,
         false
@@ -348,9 +367,14 @@ void XPBDSolver::_solvePenetration(Ref<ContactSet> contact, const float h) {
     contact->lambda_n += delta_lambda;
 }
 
-void XPBDSolver::_solveFriction(Ref<ContactSet> contact, const float h) {
+void XPBDSolver::_solveFriction(
+    Ref<ContactSet> contact, 
+    const float h
+) {
 
     /* (3.5) Static friction */
+
+    /* (26) contact->update() calculates p1, p2 and penetration depth (d). */
     contact->update();
     
     /* (26) Positions in current state and before the substep integration */
@@ -368,35 +392,30 @@ void XPBDSolver::_solveFriction(Ref<ContactSet> contact, const float h) {
      * To enforce static friction, we apply Δx = Δp_t
      * at the contact points with a = 0.
      */
-    const float d_lambda_t = XPBDSolver::applyBodyPairCorrection(
+    auto [d_lambda_t, corr] = XPBDSolver::findLagrangeMultiplier(
         contact->A,
         contact->B,
         dp_t,
         0.0f,
         h,
         contact->p1,
-        contact->p2,
-        false,
-        true
+        contact->p2
     );
 
     /**
      * "...but only if λ_t < μ_s * λ_n"
      * 
      * Note: 
-     *      this inequation was flipped because 
-     *      the lambda values are always negative!
+     *      Sign was flipped because the lambda values are always negative!
      * 
      * Note: 
-     *      with 1 position iteration (XPBD), lambda_t is always zero!
+     *      With 1 position iteration (XPBD), contact->lambda_t is always zero!
      */ 
     if (contact->lambda_t + d_lambda_t > contact->staticFriction * contact->lambda_n) {
         XPBDSolver::applyBodyPairCorrection(
             contact->A,
             contact->B,
-            dp_t,
-            0.0f,
-            h,
+            corr,
             contact->p1,
             contact->p2,
             false
@@ -448,12 +467,20 @@ void XPBDSolver::solveVelocities(const std::vector<Ref<ContactSet>>& contacts, c
         dv += contact->n * (-vn + std::max(-e * vn_tilde, 0.0f));
 
         /* (33) Velocity update */
-        XPBDSolver::applyBodyPairCorrection(
+        auto [dlambda, corr] = XPBDSolver::findLagrangeMultiplier(
             contact->A,
             contact->B,
             dv,
             0.0f,
             h,
+            contact->p1,
+            contact->p2
+        );
+        
+        XPBDSolver::applyBodyPairCorrection(
+            contact->A,
+            contact->B,
+            corr,
             contact->p1,
             contact->p2,
             true
@@ -461,22 +488,24 @@ void XPBDSolver::solveVelocities(const std::vector<Ref<ContactSet>>& contacts, c
     }
 }
 
-float XPBDSolver::applyBodyPairCorrection(
+/** 
+ * @return float Lagrange multiplier (λ)
+ */
+std::tuple<float, vec3> XPBDSolver::findLagrangeMultiplier(
     RigidBody* body0,
     RigidBody* body1,
     const vec3& corr,
     const float compliance,
-    const float dt,
+    const float h,
     const vec3& pos0,
-    const vec3& pos1,
-    const bool velocityLevel,
-    const bool precalculateDeltaLambda
+    const vec3& pos1
+    // const bool velocityLevel
 ) {
 
     const float C = glm::length(corr);
 
     if ( C < 0.0001f )
-        return 0.0f;
+        return std::make_tuple(0.0f, vec3(0.0f));
 
     vec3 n = glm::normalize(corr);
 
@@ -485,23 +514,46 @@ float XPBDSolver::applyBodyPairCorrection(
 
     float w = w0 + w1;
     if (w == 0.0f)
-        return 0.0f;
+        return std::make_tuple(0.0f, vec3(0.0f));
 
     /* (3.3.1) Lagrange multiplier
      *
      * Equation (4) was simplified because a single
      * constraint iteration is used (initial lambda = 0)
      */
-    float dlambda = -C / (w + compliance / dt / dt);
+    float dlambda = -C / (w + compliance / h / h);
 
-    if (!precalculateDeltaLambda) {
-        n = n * -dlambda;
+    n = n * -dlambda;
 
-        if (body0) body0->applyCorrection(n, pos0, velocityLevel);
-        if (body1) body1->applyCorrection(-n, pos1, velocityLevel);
-    }
+    // if (andApply) {
+    //     // n = n * -dlambda;
+    //     // if (body0) body0->applyCorrection(n, pos0, velocityLevel);
+    //     // if (body1) body1->applyCorrection(-n, pos1, velocityLevel);
 
-    return dlambda;
+    //     applyBodyPairCorrection(
+    //         body0,
+    //         body1,
+    //         n,
+    //         dlambda,
+    //         pos0,
+    //         pos1,
+    //         velocityLevel
+    //     );
+    // }
+
+    return std::make_tuple(dlambda, n);
+}
+
+void XPBDSolver::applyBodyPairCorrection(
+    RigidBody* body0,
+    RigidBody* body1,
+    const glm::vec3& corr,
+    const glm::vec3& pos0,
+    const glm::vec3& pos1,
+    const bool velocityLevel
+) {
+    if (body0) body0->applyCorrection(corr, pos0, velocityLevel);
+    if (body1) body1->applyCorrection(-corr, pos1, velocityLevel);
 }
 
 void XPBDSolver::debugContact(Ref<ContactSet> contact) {

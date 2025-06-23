@@ -108,7 +108,7 @@ struct ContactSet {
 
 namespace XPBDSolver {
 
-    const int numSubSteps = 15;
+    constexpr int NUM_SUB_STEPS = 15;
 
     inline Ref<Mesh> p1;
     inline Ref<Mesh> p2;
@@ -120,27 +120,75 @@ namespace XPBDSolver {
 
     void init();
 
-    void update(const std::vector<Ref<RigidBody>>& bodies, const std::vector<Ref<Constraint>>& constraints, std::function<void(float)> extraUpdate, const float dt);
+    void update(
+        const std::vector<Ref<RigidBody>>& bodies,
+        const std::vector<Ref<Constraint>>& constraints,
+        const float dt,
+        std::function<void(float)> onSubstep = [](float) {}
+    );
 
-    std::vector<CollisionPair> collectCollisionPairs(const std::vector<Ref<RigidBody>>& rigidBodies, const float dt);
-    std::vector<Ref<ContactSet>> getContacts(const std::vector<CollisionPair>& collisions);
+    std::vector<CollisionPair> collectCollisionPairs(
+        const std::vector<Ref<RigidBody>>& rigidBodies, 
+        const float dt
+    );
 
-    void solvePositions(const std::vector<Ref<ContactSet>>& contacts, const float h);
-    void solveVelocities(const std::vector<Ref<ContactSet>>& contacts, const float h);
+    std::vector<Ref<ContactSet>> getContacts(
+        const std::vector<CollisionPair>& collisions
+    );
+
+    void solvePositions(
+        const std::vector<Ref<ContactSet>>& contacts,
+        const float h
+    );
+    
+    void solveVelocities(
+        const std::vector<Ref<ContactSet>>& contacts,
+        const float h
+    );
 
     void _solvePenetration(Ref<ContactSet> contact, const float h);
     void _solveFriction(Ref<ContactSet> contact, const float h);
 
-    float applyBodyPairCorrection(
+    /** 
+     * Finds the Lagrange multiplier and correction vector for a pair of bodies.
+     * @param body0 First body.
+     * @param body1 Second body.
+     * @param corr Correction vector to apply.
+     * @param dlambda Compliance (m/N).
+     * @param h Substep delta time (dt/numSubSteps). 
+     * @param pos0 Position on body0 to apply the correction.
+     * @param pos1 Position on body1 to apply the correction.
+     * @return tuple containing the Lagrange multiplier and the correction vector.
+     *      - float: Lagrange multiplier (λ)
+     *      - vec3: Correction with Lagrange multiplier applied (Δx)
+     */
+    std::tuple<float, vec3> findLagrangeMultiplier(
         RigidBody* body0,
         RigidBody* body1,
         const glm::vec3& corr,
         const float compliance,
-        const float dt,
+        const float h,
+        const glm::vec3& pos0 = glm::vec3(0.0f),
+        const glm::vec3& pos1 = glm::vec3(0.0f)
+    );
+
+    /**
+     * Apply a correction to a pair of bodies.
+     * @param body0 First body.
+     * @param body1 Second body.
+     * @param corr Correction vector to apply.
+     * @param dlambda Lagrange multiplier.
+     * @param pos0 Position on body0 to apply the correction.
+     * @param pos1 Position on body1 to apply the correction.
+     * @param velocityLevel If true, apply the correction at the velocity level.
+     */
+    void applyBodyPairCorrection(
+        RigidBody* body0,
+        RigidBody* body1,
+        const glm::vec3& corr,
         const glm::vec3& pos0 = glm::vec3(0.0f),
         const glm::vec3& pos1 = glm::vec3(0.0f),
-        const bool velocityLevel = false,
-        const bool precalculateDeltaLambda = false
+        const bool velocityLevel = false
     );
 
     void debugContact(Ref<ContactSet> contact);
