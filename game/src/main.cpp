@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL_scancode.h>
 #include <iostream>
 #include <vector>
 
@@ -7,8 +8,13 @@
 #include "geom/TetrahedronGeometry.h"
 #include "geom/PlaneGeometry.h"
 #include "geom/BoxGeometry.h"
-#include "geom/ArrowGeometry.h"
 #include "gfx/CubeMapTexture.h"
+
+#include "phys/PhysicsHandler.h"
+#include "phys/RigidBody.h"
+#include "util/VectorMath.h"
+
+// #include "Car.h"
 
 int main() {
 
@@ -38,6 +44,7 @@ int main() {
         );
         
         auto camera = ref<Camera>();
+        camera->setPosition({ 0.0f, 2.0f, 5.0f });
 
         // camera->m_autoRotate = true;
         camera->setSize(
@@ -59,11 +66,11 @@ int main() {
         textureMaterial.assignTexture("assets/texture/default.jpg", "texture1");
         textureMaterial.assignTexture("assets/texture/uv_test.jpg", "texture2");
 
-        auto mesh = ref<Mesh>(TetrahedronGeometry(1.0f), colorMaterial);
-        mesh->setPosition({ 0.0f, 0.0f, 0.0f });
+        auto tetra = ref<Mesh>(TetrahedronGeometry(1.0f), colorMaterial);
+        tetra->setPosition({ 0.0f, 1.0f, -2.0f });
 
         auto box = ref<Mesh>(BoxGeometry(), textureMaterial);
-        box->setPosition({ 0.0f, 0.0f, -2.0f });
+        box->setPosition({ 0.0f, 2.0f, -3.0f });
 
         Material skyMaterial = Material(ref<Shader>("SkyBox"));
         Ref<CubeMapTexture> skyTexture = ref<CubeMapTexture>();
@@ -79,21 +86,85 @@ int main() {
         auto skybox = ref<Mesh>(BoxGeometry(1.0f, true), skyMaterial);
 
         auto meshes = std::vector<Ref<Mesh>>({
-            mesh,
+            tetra,
             box,
             skybox
         });
+
+        PhysicsHandler phys;
+        phys.init();
+
+        Ref<RigidBody> player = nullptr;
+
+        const float size = 0.5f;
+        for (size_t i = 0; i < 4; i++) {
+            auto box = ref<RigidBody>(
+                ref<BoxCollider>(size), 
+                ref<Mesh>(BoxGeometry(size), textureMaterial)
+            );
+            box->setPosition({ 0.0f, size + i * size * 1.001f, 0.0f });
+            box->setBox(vec3(size, size, size), 150.0f);
+            // box->canSleep = false;
+            meshes.push_back(box->mesh);
+            phys.add(box);
+
+            if (i == 0)
+                player = box;
+        }
+
+        auto floorMesh = ref<Mesh>(PlaneGeometry(3000.0f, 3000.0f), colorMaterial2);
+        auto floor = ref<RigidBody>(floorMesh);
+        // floor->staticFriction = 0.8f;
+        // floor->dynamicFriction = 0.8f;
+
+        floor->setPosition({ 0.0f, 0.0f, 0.0f });
+        floor->setRotation(QuatFromTwoVectors(vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f)));
+
+        floor->makeStatic();
+        phys.add(floor);
+        meshes.push_back(floorMesh);
+
+        // auto car = ref<Car>(phys);
+        // phys.add(car->m_body);
+        // meshes.push_back(car->m_body->mesh);
+        // meshes.push_back(car->m_bodyShadow);
+        // for (auto& wheel : car->m_wheels) {
+        //     meshes.push_back(wheel.m_mesh);
+        //     meshes.push_back(wheel.m_origin);
+        //     meshes.push_back(wheel.m_line);
+        //     meshes.push_back(wheel.m_line2);
+        // }
 
         /* Event loop */
         bool quit = false;
         SDL_Event e;
 
+        /* Timer */
+        float time = 0.0f;
+        float prevTime = 0.0f;
+        float dt = 0.0f;
+
         while (!quit) {
         
-            float time = SDL_GetTicks() / 1000.0f;
+            prevTime = time;
+            time = SDL_GetTicks() / 1000.0f;
+            dt = time - prevTime;
             
             while (SDL_PollEvent(&e)) {
                 if (e.type == SDL_KEYDOWN) {
+
+                    // if (e.key.keysym.sym == SDLK_SPACE) {
+                    //     player->applyForce(vec3(0.0f, 1400.0f, 0.0f), player->pose.p);
+                    // } else if (e.key.keysym.sym == SDLK_w) {
+                    //     player->applyForce(vec3(0.0f, 0.0f, -10.0f), player->pose.p);
+                    // } else if (e.key.keysym.sym == SDLK_s) {
+                    //     player->applyForce(vec3(0.0f, 0.0f, 10.0f), player->pose.p);
+                    // } else if (e.key.keysym.sym == SDLK_a) {
+                    //     player->applyForce(vec3(-10.0f, 0.0f, 0.0f), player->pose.p);
+                    // } else if (e.key.keysym.sym == SDLK_d) {
+                    //     player->applyForce(vec3(10.0f, 0.0f, 0.0f), player->pose.p);
+                    // }
+
                     std::cout << "Key pressed: " << e.key.keysym.sym << std::endl;
                 } else if (e.type == SDL_MOUSEBUTTONDOWN) {
                     std::cout << "Mouse button pressed: " << e.button.button << std::endl;
@@ -108,9 +179,25 @@ int main() {
                 }
             }
 
+            const Uint8* state = SDL_GetKeyboardState(NULL);
+
+            if (state[SDL_SCANCODE_SPACE])
+                player->applyForce(vec3(0.0f, 250.0f, 0.0f), player->pose.p);
+            if (state[SDL_SCANCODE_J])
+                player->applyForce(vec3(-250.0f, 0.0f, 0.0f), player->pose.p);
+            if (state[SDL_SCANCODE_L])
+                player->applyForce(vec3(250.0f, 0.0f, 0.0f), player->pose.p);
+            if (state[SDL_SCANCODE_I])
+                player->applyForce(vec3(0.0f, 0.0f, -250.0f), player->pose.p);
+            if (state[SDL_SCANCODE_K])
+                player->applyForce(vec3(0.0f, 0.0f, 250.0f), player->pose.p);
+
+
             float osc = sin(time * 1.5f) / 2.0f + 0.5f;
             colorMaterial.setUniform("u_color", vec4(0.0f, osc, 0.8f, 1.0f));
 
+            phys.update(dt, [&](float dt) {});
+            
             camera->update(time);
 
             // renderer.draw(scene, camera);
