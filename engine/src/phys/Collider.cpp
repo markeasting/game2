@@ -9,7 +9,7 @@
 void Collider::expandAABB(float scalar) { }
 void Collider::updateGlobalPose(const Pose& pose) { }
 
-PlaneCollider::PlaneCollider(const glm::vec2 &size, const glm::vec3 &normal) {
+PlaneCollider::PlaneCollider(const vec2 &size, const vec3 &normal) {
     m_type = ColliderType::PLANE;
 
     m_plane.normal = glm::normalize(normal);
