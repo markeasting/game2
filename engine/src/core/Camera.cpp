@@ -30,6 +30,11 @@ void Camera::bind() const {
 
 void Camera::update(float time) {
 
+    SDL_SetRelativeMouseMode(m_autoRotate 
+        ? SDL_FALSE 
+        : m_enableFreeCam ? SDL_TRUE : SDL_FALSE
+    );
+
     if (m_autoRotate) {
 
         // m_camRadius = glm::distance(m_position, m_lookAtPos);
@@ -87,7 +92,7 @@ void Camera::update(float time) {
     //             << m_position.y << ", " 
     //             << m_position.z << std::endl;
     
-    m_viewMatrix = glm::lookAt(m_position, m_lookAtPos, vec3(0.0, 1.0, 0.0));
+    m_viewMatrix = glm::lookAt(m_position, m_lookAtPos, glm::vec3(0.0, 1.0, 0.0));
     
     m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
 }
