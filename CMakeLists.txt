@@ -24,6 +24,9 @@ file(GLOB SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/game/src/*.cpp)
 # Create an executable target with the source files
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
+# Add project include directory
+target_include_directories(${PROJECT_NAME} PRIVATE game/include)
+
 # ----------------------------------- LIBS ----------------------------------- #
 
 # Add engine include and source directories
