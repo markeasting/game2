@@ -73,20 +73,20 @@ RigidBody RigidBody::disableCollision() {
 }
 
 RigidBody RigidBody::applyForce(const vec3& force, const vec3& position) {
+
     this->wake();
 
     this->force += force;
     this->torque += glm::cross(force, (this->pose.p - position));
 
-    this->wake();
-
     return *this;
 }
 
 RigidBody RigidBody::applyTorque(const vec3& torque) {
-    this->torque += torque;
 
     this->wake();
+    
+    this->torque += torque;
 
     return *this;
 }
@@ -102,7 +102,7 @@ void RigidBody::applyRotation(const vec3& rot, float scale) {
     if (phi * scale > maxPhi)
         scale = maxPhi / phi;
 
-    glm::quat dq = glm::quat(
+    quat dq = quat(
         0.0f, 
         rot.x * scale, 
         rot.y * scale, 
@@ -110,7 +110,7 @@ void RigidBody::applyRotation(const vec3& rot, float scale) {
     );
     dq = dq * this->pose.q;
 
-    this->pose.q = glm::quat(
+    this->pose.q = quat(
         this->pose.q.w + 0.5f * dq.w,
         this->pose.q.x + 0.5f * dq.x,
         this->pose.q.y + 0.5f * dq.y,
@@ -129,11 +129,25 @@ void RigidBody::integrate(const float dt) {
     if (!this->isDynamic) 
         return;
 
-    this->prevPose.p = pose.p;
-    this->prevPose.q = pose.q;
-
     if (this->isSleeping)
         return;
+
+    // this->prevPose.p = pose.p;
+    // this->prevPose.q = pose.q;
+    this->prevPose.copy(this->pose);
+
+    /* Damping */
+    // const float velLen = glm::length2(this->vel);
+    // const float omegaLen = glm::length2(this->omega);
+    // const float dampThresh = 0.1f; 
+    // const float damping = pow(0.95f, dt);
+
+    // if (velLen < dampThresh) {
+    //     this->vel *= damping;
+    // }
+    // if (omegaLen < dampThresh) {
+    //     this->omega *= damping;
+    // }
 
     /* Euler step */
     this->vel += vec3(0, this->gravity, 0) * dt;
@@ -152,6 +166,9 @@ void RigidBody::update(const float dt) {
     if (!this->isDynamic)
         return;
 
+    if (this->isSleeping)
+        return;
+
     /* Store the current velocities (required for the velocity solver) */
     this->velPrev = this->vel;
     this->omegaPrev = this->omega;
@@ -159,7 +176,7 @@ void RigidBody::update(const float dt) {
     /* Calculate velocity based on position change */
     this->vel = (this->pose.p - this->prevPose.p) / dt;
 
-    glm::quat dq = this->pose.q * glm::conjugate(this->prevPose.q);
+    quat dq = this->pose.q * glm::conjugate(this->prevPose.q);
 
     this->omega = vec3(
         dq.x * 2.0f / dt, 
@@ -316,6 +333,10 @@ void RigidBody::sleep() {
     if (this->isSleeping)
         return;
 
+    this->prevPose.copy(this->pose);
+
+    this->force = vec3(0.0f);
+    this->torque = vec3(0.0f);
     this->vel = vec3(0, 0, 0);
     this->omega = vec3(0, 0, 0);
     this->velPrev = vec3(0, 0, 0);
@@ -339,23 +360,28 @@ void RigidBody::checkSleepState(float dt) {
 
     const float velLen = glm::length2(this->vel);
     const float omegaLen = glm::length2(this->omega);
-
-    const float thresh = 0.001f;
-
+    const float sleepThresh = 0.01f; 
+    const float dampThresh = 0.2f; 
+    
     if (this->isSleeping) {
-        if (velLen > thresh || omegaLen > thresh)
+        if (velLen > sleepThresh || omegaLen > sleepThresh)
             this->wake();
     } else {
 
-        // @TODO this->hasStableContact
+        /* Damping */
+        // pow(dt) is for exponential decay, which is the proper model for 
+        // velocity damping in most physics systems (e.g. air / viscous drag).
+        float damping = pow(0.95f, dt);
 
-        if (velLen < 5 * thresh)
-            this->vel *= (1.0 - 10.0 * dt);
+        if (velLen < dampThresh) {
+            this->vel *= damping;
+        }
 
-        if (omegaLen < 5 * thresh)
-            this->omega *= (1.0 - 10.0 * dt);
+        if (omegaLen < dampThresh) {
+            this->omega *= damping;
+        }
 
-        if (velLen < thresh && omegaLen < thresh) {
+        if (velLen < sleepThresh && omegaLen < sleepThresh) {
             if (this->sleepTimer > 0.6666f) {
                 this->sleep();
             } else {

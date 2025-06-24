@@ -76,6 +76,9 @@ void XPBDSolver::update(
 
         XPBDSolver::solveVelocities(contacts, h);
 
+        for (auto const& body: bodies)
+            body->checkSleepState(h);
+
         onSubstep(h);
 
     }
@@ -86,7 +89,7 @@ void XPBDSolver::update(
         if (!body->isDynamic)
             continue;
 
-        body->checkSleepState(dt);
+        // body->checkSleepState(dt);
 
         if (body->isSleeping)
             continue;
@@ -94,8 +97,11 @@ void XPBDSolver::update(
         /* (3.5) k * dt * vbody */
         body->collider->expandAABB(2.0f * dt * body->velocity());
 
+        /* Reset forces */
         body->force = vec3(0.0f);
         body->torque = vec3(0.0f);
+
+        /* Update geometry */
         body->updateGeometry();
     }
 }
@@ -204,6 +210,7 @@ std::vector<Ref<ContactSet>> XPBDSolver::getContacts(const std::vector<Collision
                         if (!simplex.containsOrigin)
                             break;
 
+                        /* @todo compute EPA manifold and add RigidBody.hasStableContact */
                         auto epa = GjkEpa::EPA(simplex, A->collider.get(), B->collider.get());
                         
                         if (!epa.exists || epa.d <= 0.0)
