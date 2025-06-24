@@ -10,13 +10,16 @@ Camera::Camera() {}
 
 Camera::~Camera() {}
 
-void Camera::setSize(float frameBufferWidth, float frameBufferHeight) {
+void Camera::setSize(
+    const int frameBufferWidth, 
+    const int frameBufferHeight
+) {
 
     m_projectionMatrix = glm::perspective(
         glm::radians(m_fov), 
-        frameBufferWidth / frameBufferHeight, 
-        0.01f, // @todo add 'near'
-        500.0f // @todo add 'far'
+        (float) frameBufferWidth / (float) frameBufferHeight, 
+        m_near,
+        m_far
     );
     
     // @todo only invalidate/update if size has changed

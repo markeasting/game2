@@ -4,6 +4,7 @@
 
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
+#include <SDL_video.h>
 #include <iostream>
 
 CameraController::CameraController(Ref<Camera> camera) : m_camera(camera) {}
@@ -12,6 +13,7 @@ CameraController::~CameraController() {}
 
 void CameraController::update(float time) {
 
+    // SDL_SetWindowGrab();
     SDL_SetRelativeMouseMode(m_autoRotate 
         ? SDL_FALSE 
         : m_enableFreeCam ? SDL_TRUE : SDL_FALSE
@@ -28,7 +30,7 @@ void CameraController::update(float time) {
 
         m_camera->setPosition(m_position);
         // m_camera->m_lookAtPos = m_position + m_camera->front;
-        m_camera->m_lookAtPos = m_lookAtPos;
+        // m_camera->m_lookAtPos = m_lookAtPos;
 
         m_camera->front = glm::normalize(m_lookAtPos - m_position);
 
@@ -37,11 +39,6 @@ void CameraController::update(float time) {
         float posDelta = m_speed; // * time.dt;
 
         const Uint8* state = SDL_GetKeyboardState(NULL);
-
-        std::cout << "CameraController::update() - m_position: " 
-                  << m_position.x << ", " 
-                  << m_position.y << ", " 
-                  << m_position.z << std::endl;
 
         if (state[SDL_SCANCODE_LSHIFT])
             posDelta *= 5.0f;
@@ -74,7 +71,7 @@ void CameraController::update(float time) {
         m_camera->m_position = m_position;
 
         m_camera->front = glm::normalize(_front);
-        m_camera->m_lookAtPos = m_position + m_camera->front;
+        // m_camera->m_lookAtPos = m_position + m_camera->front;
     }
 
     // m_camera->updateMatrix();
