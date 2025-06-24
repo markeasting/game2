@@ -1,10 +1,14 @@
 
 #include "gfx/FrameBuffer.h"
+#include <cstdio>
 #include <stdexcept>
 
 FrameBuffer::FrameBuffer() {}
 
-void FrameBuffer::create(float width, float height) {
+void FrameBuffer::create(
+    const int width, 
+    const int height
+) {
 
     this->invalidate();
 
@@ -12,46 +16,64 @@ void FrameBuffer::create(float width, float height) {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
     /* Generate texture */
-    glGenTextures(1, &m_textureColorbuffer);
-    glBindTexture(GL_TEXTURE_2D, m_textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    // float borderColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-    // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // glGenTextures(1, &m_textureColorbuffer);
+    // glBindTexture(GL_TEXTURE_2D, m_textureColorbuffer);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    // // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    // // float borderColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+    // // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
+    // glBindTexture(GL_TEXTURE_2D, 0); // done, we can unbind the texture 
 
-    /* Attach it to currently bound framebuffer object */
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textureColorbuffer, 0);  
+    m_texture.load(width, height, GL_RGB, nullptr);
+
+    /* Attach texture to the framebuffer object */
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textureColorbuffer, 0);  
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D,
+        m_texture.getTexture(),
+        0
+    );  
 
     /* Create render buffer object */
     glGenRenderbuffers(1, &m_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, m_rbo); 
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);  
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    /* Attach the renderbuffer object to the depth and stencil attachment of the framebuffer */
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
+    /* Attach the rbo to the depth and stencil attachment of the framebuffer */
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_STENCIL_ATTACHMENT,
+        GL_RENDERBUFFER,
+        m_rbo
+    );
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    /* Check if everything is bound correctly */
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
     {
-        // Log("Framebuffer is not complete!", LogLevel::ERROR);
-        throw std::runtime_error("Framebuffer is not complete!");
+        printf("[FrameBuffer] error: %d\n", status);
+        throw std::runtime_error("Framebuffer is not complete.");
     }
 
-    /* Unbind the created framebuffer (rebind default 0) to make sure we're not using the wrong framebuffer */
+    /* Unbind the created fbo/rbo (rebind default 0) to make sure we're not using the wrong framebuffer */
     /* If this results in a blank screen, it could be that the default framebuffer has a diffent ID! */
     /* In that case, get the default ID by calling glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO); */
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
     
 }
 
-void FrameBuffer::invalidate() {
+void FrameBuffer::invalidate() const {
     if (m_fbo != 0) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);   
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glDeleteFramebuffers(1, &m_fbo);
+        glDeleteRenderbuffers(1, &m_rbo);
     }
 }
 
@@ -63,5 +85,6 @@ void FrameBuffer::bind() const {
 }
 
 GLuint FrameBuffer::getTexture() const {
-    return m_textureColorbuffer;
+    // return m_textureColorbuffer;
+    return m_texture.getTexture();
 }

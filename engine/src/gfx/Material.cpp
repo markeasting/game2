@@ -70,8 +70,8 @@ void Material::assignTexture(
     const char* source, 
     const std::string& uniform
 ) {
-
-    auto texture = ref<Texture>(source);
+    auto texture = ref<Texture>();
+    texture->load(source);
 
     this->assignTexture(texture, uniform);
 }
