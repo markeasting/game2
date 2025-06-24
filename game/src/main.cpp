@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-#include <SDL_scancode.h>
 #include <iostream>
 #include <vector>
 
@@ -45,9 +44,9 @@ int main() {
         );
         
         auto camera = ref<Camera>();
-        camera->setPosition({ 0.0f, 2.0f, 5.0f });
-
+        
         auto camController = ref<CameraController>(camera);
+        camController->setPosition({ 0.0f, 2.0f, 5.0f });
 
         // camera->m_autoRotate = true;
         camera->setSize(
@@ -154,24 +153,26 @@ int main() {
             dt = time - prevTime;
             
             while (SDL_PollEvent(&e)) {
+                
                 if (e.type == SDL_KEYDOWN) {
-
-                    // if (e.key.keysym.sym == SDLK_SPACE) {
-                    //     player->applyForce(vec3(0.0f, 1400.0f, 0.0f), player->pose.p);
-                    // } else if (e.key.keysym.sym == SDLK_w) {
-                    //     player->applyForce(vec3(0.0f, 0.0f, -10.0f), player->pose.p);
-                    // } else if (e.key.keysym.sym == SDLK_s) {
-                    //     player->applyForce(vec3(0.0f, 0.0f, 10.0f), player->pose.p);
-                    // } else if (e.key.keysym.sym == SDLK_a) {
-                    //     player->applyForce(vec3(-10.0f, 0.0f, 0.0f), player->pose.p);
-                    // } else if (e.key.keysym.sym == SDLK_d) {
-                    //     player->applyForce(vec3(10.0f, 0.0f, 0.0f), player->pose.p);
-                    // }
-
                     std::cout << "Key pressed: " << e.key.keysym.sym << std::endl;
+                
                 } else if (e.type == SDL_MOUSEBUTTONDOWN) {
                     std::cout << "Mouse button pressed: " << e.button.button << std::endl;
+
+                    if (e.button.button == SDL_BUTTON_LEFT) {
+                        camController->m_autoRotate = !camController->m_autoRotate;
+                    }
+                
                 } else if (e.type == SDL_WINDOWEVENT) {
+                    if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
+                        // const int width = e.window.data1; // Not hidpi compatible
+                        // const int height = e.window.data2; // Not hidpi compatible
+                        auto [w, h] = window.handleResize();
+                        renderer.setSize(w, h);
+                        camera->setSize(w, h);
+                    }
+                    
                     if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
                         quit = true;
                     }
@@ -184,9 +185,6 @@ int main() {
 
             const Uint8* state = SDL_GetKeyboardState(NULL);
 
-            if (state[SDL_SCANCODE_U])
-                camController->m_autoRotate = !camController->m_autoRotate;
-
             if (state[SDL_SCANCODE_SPACE])
                 player->applyForce(vec3(0.0f, 250.0f, 0.0f), player->pose.p);
             if (state[SDL_SCANCODE_J])
@@ -197,7 +195,6 @@ int main() {
                 player->applyForce(vec3(0.0f, 0.0f, -250.0f), player->pose.p);
             if (state[SDL_SCANCODE_K])
                 player->applyForce(vec3(0.0f, 0.0f, 250.0f), player->pose.p);
-
 
             float osc = sin(time * 1.5f) / 2.0f + 0.5f;
             colorMaterial.setUniform("u_color", vec4(0.0f, osc, 0.8f, 1.0f));
