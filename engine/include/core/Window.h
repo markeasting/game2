@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h> 
+#include <tuple>
 
 struct WindowConfig {
     const char* windowTitle = "MOI";
@@ -11,8 +12,7 @@ struct WindowConfig {
 };
 
 /**
- * @class Window
- * @brief Encapsulates SDL window creation and management.
+ * @brief Handles window creation and management using SDL2.
  */
 class Window {
 public:
@@ -20,10 +20,8 @@ public:
     WindowConfig m_config;
 
     /**
-     * @brief Constructor to initialize the SDL window.
-     * @param title The title of the window.
-     * @param width The width of the window.
-     * @param height The height of the window.
+     * @brief Constructor to initialize the game window.
+     * @param m_config Window configuration / params.
      */
     Window(WindowConfig m_config);
 
@@ -42,6 +40,12 @@ public:
      * @brief Swaps the front and back buffers.
      */
     void swapBuffers();
+
+    /**
+     * @brief Handles window resize events, e.g. SDL_WINDOWEVENT_RESIZED.
+     * @return A tuple containing the new framebuffer width and height.
+     */
+    std::tuple<int, int> handleResize();
 
     /**
      * @brief Gets the framebuffer width.

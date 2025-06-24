@@ -18,8 +18,12 @@ Window::Window(WindowConfig m_config) {
         SDL_WINDOWPOS_CENTERED,
         m_config.windowWidth, 
         m_config.windowHeight,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI
+        SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE
     );
+
+    if  (m_config.fullscreen) {
+        SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    }
 
     if (!m_window) {
         throw std::runtime_error(
@@ -90,11 +94,19 @@ void Window::initializeOpenGL() {
 
     /* OpenGL initialized, continue */
     SDL_GL_SetSwapInterval(m_config.vsync ? 1 : 0);
-    SDL_GL_GetDrawableSize(m_window, &m_frameBufferWidth, &m_frameBufferHeight);
+    
+    handleResize();
 
     std::cout << "[OpenGL] Device:  " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "[OpenGL] Version: " << glGetString(GL_VERSION) << std::endl;
     std::cout << "[OpenGL] Window:  " << m_frameBufferWidth << " x " << m_frameBufferHeight << std::endl;
+}
+
+std::tuple<int, int> Window::handleResize() {
+    
+    SDL_GL_GetDrawableSize(m_window, &m_frameBufferWidth, &m_frameBufferHeight);
+
+    return std::make_tuple(m_frameBufferWidth, m_frameBufferHeight);
 }
 
 void Window::swapBuffers() {
