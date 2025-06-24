@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 
+#include "core/CameraController.h"
 #include "core/Window.h"
 #include "gfx/Renderer.h"
 #include "geom/TetrahedronGeometry.h"
@@ -45,6 +46,8 @@ int main() {
         
         auto camera = ref<Camera>();
         camera->setPosition({ 0.0f, 2.0f, 5.0f });
+
+        auto camController = ref<CameraController>(camera);
 
         // camera->m_autoRotate = true;
         camera->setSize(
@@ -181,6 +184,9 @@ int main() {
 
             const Uint8* state = SDL_GetKeyboardState(NULL);
 
+            if (state[SDL_SCANCODE_U])
+                camController->m_autoRotate = !camController->m_autoRotate;
+
             if (state[SDL_SCANCODE_SPACE])
                 player->applyForce(vec3(0.0f, 250.0f, 0.0f), player->pose.p);
             if (state[SDL_SCANCODE_J])
@@ -198,7 +204,8 @@ int main() {
 
             phys.update(dt, [&](float dt) {});
             
-            camera->update(time);
+            camController->update(time);
+            camera->update();
 
             // renderer.draw(scene, camera);
             renderer.draw(meshes, camera);
