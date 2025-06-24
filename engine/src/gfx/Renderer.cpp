@@ -45,7 +45,21 @@ Renderer::Renderer(RendererConfig config): m_config(config) {
     }));
 }
 
-void Renderer::setSize(int width, int height) {
+void Renderer::setSize(
+    GLint x,
+    GLint y,
+    GLsizei width,
+    GLsizei height
+) {
+    
+    glViewport(x, y, width, height);
+
+}
+
+void Renderer::setSize(
+    const int width,
+    const int height
+) {
     
     glViewport(0, 0, width, height);
 
@@ -238,7 +252,15 @@ Renderer::~Renderer() {
     
 }
 
-static void GlDebugMsg(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
+static void GlDebugMsg(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar *message,
+    const void *userParam
+) {
     switch (severity) {
         case GL_DEBUG_SEVERITY_HIGH:
             std::cout << "[ERROR] " << message << std::endl;

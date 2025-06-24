@@ -4,9 +4,7 @@
 #include "common/gl.h"
 
 #include "obj/Mesh.h"
-#include "gfx/Shader.h"
 
-// #include "scene/Scene.h"
 #include "core/Camera.h"
 
 struct RendererConfig {
@@ -24,19 +22,60 @@ public:
 	Renderer(const Renderer&) = delete;
 	~Renderer();
 
-	void setSize(int width, int height);
+	/**
+	 * @brief Sets the viewport size using `glViewport()`. 
+	 */
+	void setSize(
+		GLint x,
+		GLint y,
+		GLsizei width,
+		GLsizei height
+	);
 
-	void draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera);
+	/**
+	 * @brief Sets the viewport size using `glViewport()`. 
+	 */
+	void setSize(
+		const int width, 
+		const int height
+	);
+
+	/**
+	 * @brief Draw a set of meshes with the given camera.
+	 */
+	void draw(
+		std::vector<Ref<Mesh>> meshes, 
+		Ref<Camera> camera
+	);
+
+	/**
+	 * @brief Draw a single mesh with the given camera.
+	 */
+	void drawMesh(
+		Ref<Mesh> mesh, 
+		Ref<Camera> camera
+	);
+
 	void clear();
 	
 private:
-	void drawMesh(Ref<Mesh> mesh, Ref<Camera> camera);
 
 	/**
-	 * @todo make FullSceenQuad class for other render passes
+	 *  @brief fullscreen quad for render passes. 
 	 */
 	Mesh m_fullscreenQuad;
 	
 };
 
-static void GlDebugMsg(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);
+/**
+ * @brief OpenGL debug message callback function.
+ * @note Only works in OpenGL version 4.3+
+ */
+static void GlDebugMsg(GLenum source,
+	GLenum type,
+	GLuint id,
+	GLenum severity,
+	GLsizei length,
+	const GLchar *message,
+	const void *userParam
+);
