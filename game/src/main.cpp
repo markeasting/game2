@@ -1,8 +1,10 @@
 #include <SDL2/SDL.h>
+#include <cstdio>
 #include <iostream>
 #include <vector>
 
-#include "core/CameraController.h"
+#include "common/ref.h"
+#include "component/Transform.h"
 #include "core/Window.h"
 #include "gfx/Renderer.h"
 #include "geom/TetrahedronGeometry.h"
@@ -14,6 +16,10 @@
 #include "phys/RigidBody.h"
 #include "util/VectorMath.h"
 
+#include "gameobject/GameObject.h"
+
+#include "component/CameraController.h"
+
 // #include "Car.h"
 
 int main() {
@@ -24,7 +30,7 @@ int main() {
                 std::string("SDL could not be initialized: ") + SDL_GetError()
             );
         }
-
+        
         Window window({
             .windowTitle = "MOIII",
             .windowWidth = 500,
@@ -42,11 +48,20 @@ int main() {
             window.getFrameBufferWidth(), // @todo make part of RendererConfig
             window.getFrameBufferHeight()
         );
+
+        std::vector<Ref<GameObject>> gameObjects;
         
-        auto camera = ref<Camera>();
+        auto cameraObject = ref<GameObject>("Camera", std::vector<Ref<Component>>{
+            ref<Camera>(),
+            ref<CameraController>()
+        });
+
+        gameObjects.push_back(cameraObject);
         
-        auto camController = ref<CameraController>(camera);
-        camController->setPosition({ 0.0f, 2.0f, 5.0f });
+        cameraObject->m_transform->setPosition({ 0.0f, 2.0f, 5.0f });
+
+        auto camera = cameraObject->getComponent<Camera>();
+        auto camController = cameraObject->getComponent<CameraController>();
 
         // camera->m_autoRotate = true;
         camera->setSize(
@@ -68,11 +83,19 @@ int main() {
         textureMaterial.assignTexture("assets/texture/default.jpg", "texture1");
         textureMaterial.assignTexture("assets/texture/uv_test.jpg", "texture2");
 
-        auto tetra = ref<Mesh>(TetrahedronGeometry(1.0f), colorMaterial);
-        tetra->setPosition({ 0.0f, 1.0f, -2.0f });
+        auto tetra = ref<GameObject>("Tetrahedron", std::vector<Ref<Component>>{
+            ref<Mesh>(ref<TetrahedronGeometry>(1.0f), colorMaterial)
+        });
+        
+        gameObjects.push_back(tetra);
 
-        auto box = ref<Mesh>(BoxGeometry(), textureMaterial);
-        box->setPosition({ 0.0f, 2.0f, -3.0f });
+        tetra->m_transform->setPosition({ 0.0f, 1.0f, -2.0f });
+
+        // auto box = GameObject("Box", {
+        //     ref<Mesh>(BoxGeometry(), textureMaterial)
+        // });
+        // box.m_transform->setPosition({ 0.0f, 2.0f, -3.0f });
+        // gameObjects.push_back(box);
 
         Material skyMaterial = Material(ref<Shader>("SkyBox"));
         Ref<CubeMapTexture> skyTexture = ref<CubeMapTexture>();
@@ -85,47 +108,62 @@ int main() {
             "assets/texture/skybox/back.jpg"
         });
         skyMaterial.assignTexture(skyTexture, "texture1");
-        auto skybox = ref<Mesh>(BoxGeometry(1.0f, true), skyMaterial);
 
-        auto meshes = std::vector<Ref<Mesh>>({
-            tetra,
-            box,
-            skybox
+        auto skybox = ref<GameObject>("Skybox", std::vector<Ref<Component>>{
+            ref<Mesh>(BoxGeometry(1.0f, true), skyMaterial)
         });
+
+        gameObjects.push_back(skybox);
 
         PhysicsHandler phys;
         phys.init();
 
-        Ref<RigidBody> player = nullptr;
-
         const float size = 0.5f;
         for (size_t i = 0; i < 4; i++) {
-            auto box = ref<RigidBody>(
-                ref<BoxCollider>(size), 
-                ref<Mesh>(BoxGeometry(size), textureMaterial)
-            );
-            box->setPosition({ 0.0f, size + i * size * 1.001f, 0.0f });
-            box->setBox(vec3(size, size, size), 150.0f);
-            // box->canSleep = false;
-            meshes.push_back(box->mesh);
-            phys.add(box);
 
-            if (i == 0)
-                player = box;
+            auto box = ref<GameObject>("Box", std::vector<Ref<Component>>{
+                ref<Mesh>(BoxGeometry(size), textureMaterial),
+                ref<RigidBody>(
+                    ref<BoxCollider>(size)
+                )
+            });
+
+            gameObjects.push_back(box);
+
+            // auto body = box->addComponent<RigidBody>(ref<BoxCollider>(size));
+            auto body = box->getComponent<RigidBody>();
+
+            body->setPosition({ 0.0f, size + i * size * 1.001f, 0.0f });
+            body->setBox(vec3(size, size, size), 150.0f);
+
+            // if (i == 0)
+            //     player = body;
         }
 
-        auto floorMesh = ref<Mesh>(PlaneGeometry(3000.0f, 3000.0f), colorMaterial2);
-        auto floor = ref<RigidBody>(floorMesh);
-        // floor->staticFriction = 0.8f;
-        // floor->dynamicFriction = 0.8f;
+        // debug box[0] in gameobjects 
+        // find first 'Box' name in gameObjects
+        // auto debugBox = std::find_if(gameObjects.begin(), gameObjects.end(), [](const GameObject& obj) {
+        //     return obj.name == "Box";
+        // });
 
-        floor->setPosition({ 0.0f, 0.0f, 0.0f });
-        floor->setRotation(QuatFromTwoVectors(vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f)));
+        ////////////////////////////////////////////////
+        auto floor = ref<GameObject>("Floor", std::vector<Ref<Component>>{
+            ref<Mesh>(PlaneGeometry(300.0f, 300.0f), colorMaterial2),
+            ref<RigidBody>()
+        });
+        auto floorBody = floor->getComponent<RigidBody>();
 
-        floor->makeStatic();
-        phys.add(floor);
-        meshes.push_back(floorMesh);
+        floorBody->setPosition({ 0.0f, 0.0f, 0.0f });
+        floorBody->setRotation(QuatFromTwoVectors(vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f)));
 
+        // floorBody->staticFriction = 0.8f;
+        // floorBody->dynamicFriction = 0.8f;
+        floorBody->makeStatic();
+
+        gameObjects.push_back(floor);
+        
+        // meshes.push_back(floor->getComponent<Mesh>());
+        
         // auto car = ref<Car>(phys);
         // phys.add(car->m_body);
         // meshes.push_back(car->m_body->mesh);
@@ -145,6 +183,19 @@ int main() {
         float time = 0.0f;
         float prevTime = 0.0f;
         float dt = 0.0f;
+        
+        /* get all mesh components from all game objects */
+        std::vector<Ref<Mesh>> meshes;
+        for (const auto& obj : gameObjects) {
+            
+            if (auto mesh = obj->tryGetComponent<Mesh>()) {
+                meshes.push_back(mesh);
+            }
+
+            if (auto body = obj->tryGetComponent<RigidBody>()) {
+                phys.add(body);
+            }
+        }
 
         while (!quit) {
         
@@ -183,26 +234,27 @@ int main() {
                 }
             }
 
-            const Uint8* state = SDL_GetKeyboardState(NULL);
+            // const Uint8* state = SDL_GetKeyboardState(NULL);
 
-            if (state[SDL_SCANCODE_SPACE])
-                player->applyForce(vec3(0.0f, 250.0f, 0.0f), player->pose.p);
-            if (state[SDL_SCANCODE_J])
-                player->applyForce(vec3(-250.0f, 0.0f, 0.0f), player->pose.p);
-            if (state[SDL_SCANCODE_L])
-                player->applyForce(vec3(250.0f, 0.0f, 0.0f), player->pose.p);
-            if (state[SDL_SCANCODE_I])
-                player->applyForce(vec3(0.0f, 0.0f, -250.0f), player->pose.p);
-            if (state[SDL_SCANCODE_K])
-                player->applyForce(vec3(0.0f, 0.0f, 250.0f), player->pose.p);
+            // if (state[SDL_SCANCODE_SPACE])
+            //     player->applyForce(vec3(0.0f, 250.0f, 0.0f), player->pose.p);
+            // if (state[SDL_SCANCODE_J])
+            //     player->applyForce(vec3(-250.0f, 0.0f, 0.0f), player->pose.p);
+            // if (state[SDL_SCANCODE_L])
+            //     player->applyForce(vec3(250.0f, 0.0f, 0.0f), player->pose.p);
+            // if (state[SDL_SCANCODE_I])
+            //     player->applyForce(vec3(0.0f, 0.0f, -250.0f), player->pose.p);
+            // if (state[SDL_SCANCODE_K])
+            //     player->applyForce(vec3(0.0f, 0.0f, 250.0f), player->pose.p);
 
             float osc = sin(time * 1.5f) / 2.0f + 0.5f;
             colorMaterial.setUniform("u_color", vec4(0.0f, osc, 0.8f, 1.0f));
 
             phys.update(dt, [&](float dt) {});
-            
-            camController->update(time);
-            camera->update();
+
+            for (auto& obj : gameObjects) {
+                obj->update(time, dt);
+            }
 
             // renderer.draw(scene, camera);
             renderer.draw(meshes, camera);

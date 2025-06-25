@@ -26,7 +26,7 @@ public:
     vec3 m_relativePos = vec3(0.0f);
     vec3 m_relativePosW = vec3(0.0f);
     
-    Ref<Mesh> m_mesh = nullptr; // Debug mesh
+    // Ref<Mesh> m_mesh = nullptr; // Debug mesh
 
     AABB m_aabb;
     AABB m_expanded_aabb;

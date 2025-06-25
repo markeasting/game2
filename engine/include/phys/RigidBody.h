@@ -1,6 +1,8 @@
 #pragma once
 
 #include "common/glm.h"
+
+#include "component/Component.h"
 #include "obj/Mesh.h"
 
 #include "phys/Collider.h"
@@ -8,7 +10,10 @@
 
 #include <string>
 
-class RigidBody {
+/**
+ * @todo maybe add a 'wrapper' component instead of inheriting. 
+ */
+class RigidBody : public Component {
 public:
 
     unsigned int id = 0;
@@ -23,7 +28,7 @@ public:
     bool canSleep = true;
     float sleepTimer = 0.0f;
 
-    Ref<Mesh> mesh = nullptr;           /* Visual representation of the body */
+    // Ref<Mesh> mesh = nullptr;           /* Visual representation of the body */
     Ref<Collider> collider = nullptr;   /* Physics representation of the body */
 
     vec3 vel = vec3(0);                 /* https://en.m.wikipedia.org/wiki/Velocity */
@@ -45,12 +50,13 @@ public:
     float restitution = 0.4f;           /* https://en.m.wikipedia.org/wiki/Coefficient_of_restitution */
 
     RigidBody() = default;
-    RigidBody(Ref<Mesh> mesh, bool isConvex = true);
-    RigidBody(Ref<Collider> collider, Ref<Mesh> mesh = nullptr);
+    RigidBody(Ref<Collider> collider);
     ~RigidBody() = default;
 
+    void onCreate() override;
+
     // @TODO setPos, setRotation, setVel, setOmega, etc.
-    RigidBody setMesh(Ref<Mesh> mesh, bool applyTransform = true);
+    RigidBody setMesh(bool applyTransform = true); // Applies Mesh component
     RigidBody setBox(const vec3& size, float density = 1.0);
     RigidBody setPosition(const vec3& pos);
     RigidBody setRotation(const quat& rot);

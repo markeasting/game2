@@ -19,7 +19,7 @@ public:
 
 	std::vector<Ref<RigidBody>> m_bodies = {};
 	std::vector<Ref<Constraint>> m_constraints = {};
-    std::vector<Ref<Mesh>> m_debugMeshes;
+    // std::vector<Ref<Mesh>> m_debugMeshes;
 
     PhysicsHandler() = default;
     ~PhysicsHandler() = default;

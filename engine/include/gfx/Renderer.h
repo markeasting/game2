@@ -5,7 +5,7 @@
 
 #include "obj/Mesh.h"
 
-#include "core/Camera.h"
+#include "component/Camera.h"
 
 struct RendererConfig {
 	bool wireframe = false;

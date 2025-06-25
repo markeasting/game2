@@ -1,14 +1,25 @@
 #pragma once
 
-#include "obj/Object3D.h"
+#include "common/glm.h"
+
+// #include "gameobject/GameObject.h"
+#include "component/Component.h"
 #include "gfx/FrameBuffer.h"
 
-class Camera : public Object3D {
+struct CameraSettings {
+    float fov = 70.0f;          // Field of view in degrees
+    float nearPlane = 0.01f;    // Near clipping plane
+    float farPlane = 500.0f;    // Far clipping plane
+};
+
+class Camera : public Component {
 public:
+
+    CameraSettings m_settings;
     
-    float m_near = 0.01f; // g_settings.cameraNear;
-    float m_far = 500.0f; // g_settings.cameraFar;
-    float m_fov = 70; // g_settings.fov;
+    // float m_near = 0.01f; // g_settings.cameraNear;
+    // float m_far = 500.0f; // g_settings.cameraFar;
+    // float m_fov = 70.0f; // g_settings.fov;
 
     // @todo pass with a uniform buffer object
     mat4 m_viewMatrix = mat4(1.0f);
@@ -18,6 +29,7 @@ public:
     FrameBuffer m_frameBuffer;
 
     Camera();
+    Camera(CameraSettings settings);
     ~Camera();
 
     void setSize(
@@ -31,7 +43,7 @@ public:
     inline vec3 getRight() { return right; }
 
     void bind() const;
-    void update();
+    void update(float time, float dt) override;
 
 protected:
     friend class CameraController;

@@ -2,6 +2,9 @@
 #include "gfx/Renderer.h"
 #include "gfx/Material.h"
 
+#include "gameobject/GameObject.h"
+#include "component/Transform.h"
+
 Renderer::Renderer(RendererConfig config): m_config(config) {
     
     // if (GLVersion.major > 4 && GLVersion.minor >= 3) {
@@ -192,36 +195,44 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
 
 void Renderer::drawMesh(Ref<Mesh> mesh, Ref<Camera> camera) {
 
+    // assert(mesh != nullptr);
+    // assert(mesh->gameObject != nullptr && "Mesh must have a GameObject with a Transform component");
+
     mesh->bind();
 
-    auto matrix = mesh->getWorldPositionMatrix();
+    auto transform = mesh->gameObject->tryGetComponent<Transform>();
 
-    // @TODO only used for skybox
-    mesh->m_material->setUniform(
-        "u_viewRotationMatrix", 
-        glm::mat4(glm::mat3(camera->m_viewMatrix))
-    );
+    if (transform) {
 
-    // @TODO premature optimization is <...>
-    // Maybe just go back to separate m * v * p
-    mesh->m_material->setUniform(
-        "u_projectionMatrix", 
-        camera->m_projectionMatrix
-    );
+        auto matrix = transform->getWorldPositionMatrix();
 
-    mesh->m_material->setUniform(
-        "u_modelViewMatrix", 
-        mesh->m_useProjectionMatrix 
-            ? camera->m_viewMatrix * matrix
-            : matrix
-    );
+        // @TODO only used for skybox
+        mesh->m_material->setUniform(
+            "u_viewRotationMatrix", 
+            glm::mat4(glm::mat3(camera->m_viewMatrix))
+        );
 
-    mesh->m_material->setUniform(
-        "u_modelViewProjectionMatrix", 
-        mesh->m_useProjectionMatrix 
-            ? camera->m_viewProjectionMatrix * matrix
-            : matrix
-    );
+        // @TODO premature optimization is <...>
+        // Maybe just go back to separate m * v * p
+        mesh->m_material->setUniform(
+            "u_projectionMatrix", 
+            camera->m_projectionMatrix
+        );
+
+        mesh->m_material->setUniform(
+            "u_modelViewMatrix", 
+            transform->m_useProjectionMatrix 
+                ? camera->m_viewMatrix * matrix
+                : matrix
+        );
+
+        mesh->m_material->setUniform(
+            "u_modelViewProjectionMatrix", 
+            transform->m_useProjectionMatrix 
+                ? camera->m_viewProjectionMatrix * matrix
+                : matrix
+        );
+    }
 
     if (m_config.wireframe || mesh->m_material && mesh->m_material->wireframe) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

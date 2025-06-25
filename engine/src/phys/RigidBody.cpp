@@ -1,50 +1,73 @@
 #include "phys/RigidBody.h"
+#include "component/Transform.h"
+#include "gameobject/GameObject.h"
 
+#include <cstdio>
 #include <stdexcept>
 
-RigidBody::RigidBody(Ref<Mesh> mesh, bool isConvex)
-    : mesh(mesh) 
-{
+// RigidBody::RigidBody(Ref<Mesh> mesh, bool isConvex)
+//     : mesh(mesh) 
+// {
 
-    assert(mesh != nullptr);
+//     assert(mesh != nullptr);
 
-    if (this->collider == nullptr) {
-        this->collider = ref<MeshCollider>(mesh->m_geometry, isConvex);
-    }
+//     if (this->collider == nullptr) {
+//         this->collider = ref<MeshCollider>(mesh->m_geometry, isConvex);
+//     }
 
-    this->mesh->m_managedByRigidBody = true;
-    this->pose.p = mesh->getPosition();
-    this->pose.q = mesh->getRotation();
+//     this->mesh->m_managedByRigidBody = true;
+//     this->pose.p = mesh->getPosition();
+//     this->pose.q = mesh->getRotation();
 
-    this->updateCollider();
-}
+//     this->updateCollider();
+// }
 
-RigidBody::RigidBody(Ref<Collider> collider, Ref<Mesh> mesh)
+RigidBody::RigidBody(Ref<Collider> collider)
     : collider(collider) 
 {
 
     // if (this->collider == nullptr) {
     //     this->collider = ref<MeshCollider>(mesh->m_geometry);
     // }
+
     assert(collider != nullptr);
 
-    if (mesh) {
-        // this->mesh->m_managedByRigidBody = true;
-        // this->pose.p = mesh->getPosition();
-        // this->pose.q = mesh->getRotation();
-        this->setMesh(mesh);
-    }
+    // if (mesh) {
+    //     // this->mesh->m_managedByRigidBody = true;
+    //     // this->pose.p = mesh->getPosition();
+    //     // this->pose.q = mesh->getRotation();
+    //     this->setMesh(mesh);
+    // }
 
     this->updateCollider();
 }
 
-RigidBody RigidBody::setMesh(Ref<Mesh> mesh, bool applyTransform) {
-    this->mesh = mesh;
+void RigidBody::onCreate() {
+    std::cout << "[RigidBody] Created RigidBody" << std::endl;
+
+    auto mesh = gameObject->tryGetComponent<Mesh>();
+
+    if (mesh) {
+        // this->mesh = mesh;
+        this->setMesh(true);
+    } else {
+        printf("[RigidBody] Warning: No Mesh component found on GameObject '%s'. RigidBody will not have a mesh.\n", gameObject->name.c_str());
+    }
+
+    if (this->collider == nullptr) {
+        this->collider = ref<MeshCollider>(mesh->m_geometry, true);
+    }
+}
+
+RigidBody RigidBody::setMesh(bool applyTransform) {
+
+    // auto mesh = gameObject->tryGetComponent<Mesh>();
+    auto transform = gameObject->getComponent<Transform>();
 
     if (applyTransform) {
-        this->mesh->m_managedByRigidBody = true;
-        this->pose.p = mesh->getPosition();
-        this->pose.q = mesh->getRotation();
+        // mesh->m_managedByRigidBody = true;
+        this->pose.p = transform->getPosition();
+        this->pose.q = transform->getRotation();
 
         this->prevPose.copy(this->pose);
     }
@@ -310,20 +333,28 @@ void RigidBody::updateGeometry() {
     // if (this->isSleeping)
     //     return;
 
-    if (this->mesh) {
-        this->mesh->setPosition(this->pose.p);
-        this->mesh->setRotation(this->pose.q);
+    auto mesh = gameObject->tryGetComponent<Mesh>();
+
+    if (mesh) { // @todo always update transform?
+        auto transform = gameObject->getComponent<Transform>();
+        transform->setPosition(this->pose.p);
+        transform->setRotation(this->pose.q);
     }
 
-    if (this->collider->m_mesh != nullptr) {
-        this->collider->m_mesh->setPosition(this->collider->m_relativePosW);
-        this->collider->m_mesh->setRotation(this->pose.q);
-    }
+    /* Debug collider mesh - @todo move to component */
+    // if (this->collider->m_mesh != nullptr) {
+    //     this->collider->m_mesh->setPosition(this->collider->m_relativePosW);
+    //     this->collider->m_mesh->setRotation(this->pose.q);
+    // }
 }
 
 void RigidBody::updateCollider() {
     if (!this->isDynamic) {
         this->collider->expandAABB();
+    }
+
+    if (this->collider == nullptr) {
+        throw std::runtime_error("[RigidBody] Collider is null. Cannot update collider.");
     }
 
     this->collider->updateGlobalPose(this->pose);
