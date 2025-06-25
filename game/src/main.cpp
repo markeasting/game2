@@ -118,6 +118,8 @@ int main() {
         PhysicsHandler phys;
         phys.init();
 
+        Ref<RigidBody> player = nullptr;
+
         const float size = 0.5f;
         for (size_t i = 0; i < 4; i++) {
 
@@ -136,8 +138,8 @@ int main() {
             body->setPosition({ 0.0f, size + i * size * 1.001f, 0.0f });
             body->setBox(vec3(size, size, size), 150.0f);
 
-            // if (i == 0)
-            //     player = body;
+            if (i == 0)
+                player = body;
         }
 
         // debug box[0] in gameobjects 
@@ -234,18 +236,18 @@ int main() {
                 }
             }
 
-            // const Uint8* state = SDL_GetKeyboardState(NULL);
+            const Uint8* state = SDL_GetKeyboardState(NULL);
 
-            // if (state[SDL_SCANCODE_SPACE])
-            //     player->applyForce(vec3(0.0f, 250.0f, 0.0f), player->pose.p);
-            // if (state[SDL_SCANCODE_J])
-            //     player->applyForce(vec3(-250.0f, 0.0f, 0.0f), player->pose.p);
-            // if (state[SDL_SCANCODE_L])
-            //     player->applyForce(vec3(250.0f, 0.0f, 0.0f), player->pose.p);
-            // if (state[SDL_SCANCODE_I])
-            //     player->applyForce(vec3(0.0f, 0.0f, -250.0f), player->pose.p);
-            // if (state[SDL_SCANCODE_K])
-            //     player->applyForce(vec3(0.0f, 0.0f, 250.0f), player->pose.p);
+            if (state[SDL_SCANCODE_SPACE])
+                player->applyForce(vec3(0.0f, 250.0f, 0.0f), player->pose.p);
+            if (state[SDL_SCANCODE_J])
+                player->applyForce(vec3(-250.0f, 0.0f, 0.0f), player->pose.p);
+            if (state[SDL_SCANCODE_L])
+                player->applyForce(vec3(250.0f, 0.0f, 0.0f), player->pose.p);
+            if (state[SDL_SCANCODE_I])
+                player->applyForce(vec3(0.0f, 0.0f, -250.0f), player->pose.p);
+            if (state[SDL_SCANCODE_K])
+                player->applyForce(vec3(0.0f, 0.0f, 250.0f), player->pose.p);
 
             float osc = sin(time * 1.5f) / 2.0f + 0.5f;
             colorMaterial.setUniform("u_color", vec4(0.0f, osc, 0.8f, 1.0f));
