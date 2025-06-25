@@ -567,23 +567,23 @@ void XPBDSolver::debugContact(Ref<ContactSet> contact) {
 
     assert(contact != nullptr);
 
-    XPBDSolver::p1->setPosition(contact->p1);
-    XPBDSolver::p2->setPosition(contact->p2);
+    // XPBDSolver::p1->setPosition(contact->p1);
+    // XPBDSolver::p2->setPosition(contact->p2);
 
-    XPBDSolver::n->setPosition(contact->p1);
-    XPBDSolver::n->setRotation(QuatFromTwoVectors(vec3(0, 1.0f, 0), contact->n));
+    // XPBDSolver::n->setPosition(contact->p1);
+    // XPBDSolver::n->setRotation(QuatFromTwoVectors(vec3(0, 1.0f, 0), contact->n));
 
-    XPBDSolver::r1->setPosition(contact->A->pose.p);
-    XPBDSolver::r2->setPosition(contact->B->pose.p);
-    XPBDSolver::r1->setRotation(contact->A->pose.q * QuatFromTwoVectors(vec3(0, 1.0f, 0), contact->r1));
-    XPBDSolver::r2->setRotation(contact->B->pose.q * QuatFromTwoVectors(vec3(0, 1.0f, 0), contact->r2));
-    XPBDSolver::r1->setScale(glm::length(contact->r1));
-    XPBDSolver::r2->setScale(glm::length(contact->r2));
+    // XPBDSolver::r1->setPosition(contact->A->pose.p);
+    // XPBDSolver::r2->setPosition(contact->B->pose.p);
+    // XPBDSolver::r1->setRotation(contact->A->pose.q * QuatFromTwoVectors(vec3(0, 1.0f, 0), contact->r1));
+    // XPBDSolver::r2->setRotation(contact->B->pose.q * QuatFromTwoVectors(vec3(0, 1.0f, 0), contact->r2));
+    // XPBDSolver::r1->setScale(glm::length(contact->r1));
+    // XPBDSolver::r2->setScale(glm::length(contact->r2));
 
 }
 
 void XPBDSolver::setDebugVector(const vec3& vector, const vec3& position) {
-    XPBDSolver::debugArrow->setPosition(position);
-    XPBDSolver::debugArrow->setScale(glm::length(vector));
-    XPBDSolver::debugArrow->setRotation(QuatFromTwoVectors(vec3(0, 1.0f, 0), vector));
+    // XPBDSolver::debugArrow->setPosition(position);
+    // XPBDSolver::debugArrow->setScale(glm::length(vector));
+    // XPBDSolver::debugArrow->setRotation(QuatFromTwoVectors(vec3(0, 1.0f, 0), vector));
 }

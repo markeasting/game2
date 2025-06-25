@@ -47,7 +47,7 @@ MeshCollider::MeshCollider(Ref<Mesh> mesh)
 
 void MeshCollider::setGeometry(Ref<Geometry> geometry) {
 
-    m_mesh = ref<Mesh>(*geometry);
+    // m_mesh = ref<Mesh>(*geometry);
 
     for (Vertex v : geometry->m_vertexBuffer->m_data) {
         m_vertices.push_back(v.position);
