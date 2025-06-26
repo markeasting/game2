@@ -26,6 +26,4 @@ public:
      * - GL_TEXTURE_CUBE_MAP_NEGATIVE_Z (back)
      */
     void loadCubemap(const std::array<std::string, 6>& faces);
-
-    unsigned int m_texture; // OpenGL texture ID
 };

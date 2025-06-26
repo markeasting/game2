@@ -3,9 +3,8 @@
 #include "common/ref.h"
 #include "common/gl.h"
 
-#include "obj/Mesh.h"
-
 #include "component/Camera.h"
+#include "component/Mesh.h"
 
 struct RendererConfig {
 	bool wireframe = false;

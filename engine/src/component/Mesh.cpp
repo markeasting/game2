@@ -1,5 +1,5 @@
 
-#include "obj/Mesh.h"
+#include "component/Mesh.h"
 
 Mesh::Mesh() : 
     m_geometry(nullptr),

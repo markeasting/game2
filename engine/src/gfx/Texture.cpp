@@ -96,6 +96,16 @@ void Texture::load(GLsizei width, GLsizei height, GLenum format, void* data) {
     GLfloat max_anisotropy;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &max_anisotropy);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, std::min(max_anisotropy, 16.0f));
+
+    printf("[Texture] Initialized #%u, size: %dx%d, format: %s\n", 
+        m_texture, 
+        m_width, 
+        m_height, 
+        (m_format == GL_RGBA) ? "GL_RGBA" : "GL_RGB"
+    );
+
+    /* Unbind after completing tasks */
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Texture::load(const char* source) {
@@ -121,7 +131,7 @@ void Texture::load(const char* source) {
             &nrChannels,
             0
         ); 
-        printf("[Texture] failed to load texture: %s, using default texture: %s\n", source, m_defaultTexture);
+        printf("[Texture] Failed to load texture: %s, using default texture: %s\n", source, m_defaultTexture);
     }
 
     if (!data) {
@@ -136,7 +146,7 @@ void Texture::load(const char* source) {
 
     stbi_image_free(data); // Free the image data since it lives on the GPU now. 
     
-    printf("[Texture] loaded: %s, size: %dx%d\n", source, width, height);
+    printf("[Texture] Loaded #%u, %s\n", m_texture, source);
 }
 
 void Texture::bind() const {
@@ -146,7 +156,7 @@ void Texture::bind() const {
 void Texture::invalidate() {
     if (m_texture != 0) {
 
-        printf("[Texture] unloading texture: %u\n", m_texture);
+        printf("[Texture] Unloading #%u\n", m_texture);
 
         glBindTexture(GL_TEXTURE_2D, 0);
         glDeleteTextures(1, &m_texture);

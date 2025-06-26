@@ -2,7 +2,7 @@
 
 #include "common/glm.h"
 
-#include "obj/Mesh.h"
+#include "component/Mesh.h"
 
 #include "phys/RigidBody.h"
 #include "phys/Constraint.h"
@@ -14,16 +14,15 @@ namespace XPBDSolver {
 
     constexpr int NUM_SUB_STEPS = 15;
 
-    inline Ref<Mesh> p1;
-    inline Ref<Mesh> p2;
-    inline Ref<Mesh> r1;
-    inline Ref<Mesh> r2;
-    inline Ref<Mesh> n;
-
-    inline Ref<Mesh> debugArrow;
-
     void init();
 
+    /**
+     * @brief Updates the physics simulation for a given time step.
+     * @param bodies Vector of rigid bodies to update.
+     * @param constraints Vector of constraints to apply.
+     * @param dt Delta time for the current physics step.
+     * @param onSubstep Callback function to execute after each substep.
+     */
     void update(
         const std::vector<Ref<RigidBody>>& bodies,
         const std::vector<Ref<Constraint>>& constraints,
@@ -31,20 +30,41 @@ namespace XPBDSolver {
         std::function<void(float)> onSubstep = [](float) {}
     );
 
+    /**
+     * @brief Collects potential collision pairs (broad phase)
+     * @param rigidBodies Vector of rigid bodies to check for collisions.
+     * @param dt Delta time for the current physics step.
+     * @return Vector of basic collision pairs.
+     */
     std::vector<CollisionPair> collectCollisionPairs(
         const std::vector<Ref<RigidBody>>& rigidBodies, 
         const float dt
     );
 
+    /**
+     * @brief Gets contacts from the collected collision pairs (narrow phase).
+     * @param collisions Vector of collision pairs to process.
+     * @return Vector of detailed contact sets.
+     */
     std::vector<Ref<ContactSet>> getContacts(
         const std::vector<CollisionPair>& collisions
     );
 
+    /**
+     * @brief Position-level solver for resolving contact and friction.
+     * @param contacts Vector of contact sets to process.
+     * @param h Substep delta time (dt / NUM_SUB_STEPS).
+     */
     void solvePositions(
         const std::vector<Ref<ContactSet>>& contacts,
         const float h
     );
     
+    /**
+     * @brief Velocity-level solver for contacts.
+     * @param contacts Vector of contact sets to process.
+     * @param h Substep delta time (dt / NUM_SUB_STEPS).
+     */
     void solveVelocities(
         const std::vector<Ref<ContactSet>>& contacts,
         const float h
@@ -62,7 +82,7 @@ namespace XPBDSolver {
      * @param h Substep delta time (dt/numSubSteps). 
      * @param pos0 Position on body0 to apply the correction.
      * @param pos1 Position on body1 to apply the correction.
-     * @return tuple containing the Lagrange multiplier and the correction vector.
+     * @return tuple containing the Lagrange multiplier and correction vector.
      *      - float: Lagrange multiplier (λ)
      *      - vec3: Correction with Lagrange multiplier applied (Δx)
      */
@@ -95,7 +115,15 @@ namespace XPBDSolver {
         const bool velocityLevel = false
     );
 
+    /* Debugging tools ------------------------------------------------------ */
+    
     void debugContact(Ref<ContactSet> contact);
     void setDebugVector(const vec3& vector, const vec3& position);
 
+    inline Ref<Mesh> p1;
+    inline Ref<Mesh> p2;
+    inline Ref<Mesh> r1;
+    inline Ref<Mesh> r2;
+    inline Ref<Mesh> n;
+    inline Ref<Mesh> debugArrow;
 }

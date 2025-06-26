@@ -24,17 +24,6 @@ public:
         std::unordered_map<std::string, Ref<IUniform>> uniforms = {}
     );
 
-    // Material(
-    //     const std::string& shaderBasePath, 
-    //     std::unordered_map<std::string, Ref<IUniform>> uniforms = {}
-    // );
-    
-    // Material(
-    //     const std::string& vert, 
-    //     const std::string& frag, 
-    //     std::unordered_map<std::string, Ref<IUniform>> uniforms = {}
-    // );
-
     ~Material() = default;
 
     template <typename T>

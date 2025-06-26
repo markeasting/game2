@@ -1,26 +1,21 @@
 #include <SDL2/SDL.h>
-#include <cstdio>
-#include <iostream>
-#include <vector>
 
 #include "common/ref.h"
-#include "component/Transform.h"
 #include "core/Window.h"
+
 #include "gfx/Renderer.h"
+#include "gfx/CubeMapTexture.h"
+
 #include "geom/TetrahedronGeometry.h"
 #include "geom/PlaneGeometry.h"
 #include "geom/BoxGeometry.h"
-#include "gfx/CubeMapTexture.h"
 
 #include "phys/PhysicsHandler.h"
 #include "phys/RigidBody.h"
 #include "util/VectorMath.h"
 
 #include "gameobject/GameObject.h"
-
 #include "component/CameraController.h"
-
-// #include "Car.h"
 
 int main() {
 

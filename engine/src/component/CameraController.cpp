@@ -7,10 +7,6 @@
 
 #include <SDL2/SDL.h>
 
-// CameraController::CameraController(Ref<Camera> camera) : m_camera(camera) {}
-
-CameraController::~CameraController() {}
-
 void CameraController::update(float time, float dt) {
 
     // SDL_SetWindowGrab();
@@ -30,10 +26,6 @@ void CameraController::update(float time, float dt) {
         transform->m_position.x = sin(time) * m_camRadius;
         transform->m_position.z = cos(time) * m_camRadius;
         transform->m_position.y = 1.0f;
-
-        // m_camera->setPosition(m_camera->m_position);
-        // m_camera->m_lookAtPos = m_position + m_camera->front;
-        // m_camera->m_lookAtPos = m_lookAtPos;
 
         camera->front = glm::normalize(m_lookAtPos - transform->m_position);
 
@@ -71,10 +63,7 @@ void CameraController::update(float time, float dt) {
         _front.y = sin(glm::radians(m_eulerRotation.y));
         _front.z = sin(glm::radians(m_eulerRotation.x)) * cos(glm::radians(m_eulerRotation.y));
 
-        // m_camera->m_position = m_camera->m_position;
-
         camera->front = glm::normalize(_front);
-        // m_camera->m_lookAtPos = m_position + m_camera->front;
     }
 
     // m_camera->updateMatrix();

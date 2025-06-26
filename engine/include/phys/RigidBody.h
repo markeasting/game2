@@ -3,7 +3,6 @@
 #include "common/glm.h"
 
 #include "component/Component.h"
-#include "obj/Mesh.h"
 
 #include "phys/Collider.h"
 #include "phys/Pose.h"
@@ -28,7 +27,6 @@ public:
     bool canSleep = true;
     float sleepTimer = 0.0f;
 
-    // Ref<Mesh> mesh = nullptr;           /* Visual representation of the body */
     Ref<Collider> collider = nullptr;   /* Physics representation of the body */
 
     vec3 vel = vec3(0);                 /* https://en.m.wikipedia.org/wiki/Velocity */
@@ -67,8 +65,10 @@ public:
     RigidBody applyForce(const vec3& force, const vec3& position = vec3(0));
     RigidBody applyTorque(const vec3& torque);
 
-    float getInverseMass(const vec3& normal, const vec3& pos = vec3(0)) const; // should also be const
-    vec3 getVelocityAt(const vec3& pos, bool beforeSolve = false) const;
+    float getInverseMass(const vec3& normal, const vec3& pos = vec3(0)) const;
+
+    vec3 getVelocityAt(const vec3& pos) const;
+    
     vec3 localToWorld(const vec3& v);
     vec3 worldToLocal(const vec3& v);
 
@@ -88,7 +88,7 @@ public:
 // private:
 
     // @TODO make private with friend class at some point
-    vec3 velPrev = vec3(0);
-    vec3 omegaPrev = vec3(0);
-    Pose prevPose = Pose();
+    vec3 velPrev    = vec3(0);
+    vec3 omegaPrev  = vec3(0);
+    Pose prevPose   = Pose();
 };

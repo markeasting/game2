@@ -19,17 +19,6 @@ Material::Material(
     }
 }
 
-// Material::Material(
-//     const std::string& shaderBasePath, 
-//     std::unordered_map<std::string, Ref<IUniform>> uniforms
-// ) : Material(ref<Shader>(shaderBasePath), uniforms) {}
-
-// Material::Material(
-//     const std::string& vert, 
-//     const std::string& frag, 
-//     std::unordered_map<std::string, Ref<IUniform>> uniforms
-// ) : Material(ref<Shader>(vert, frag), uniforms) {}
-
 void Material::assignUniform(
     const std::string name, 
     Ref<IUniform> uniform
@@ -58,7 +47,7 @@ void Material::assignTexture(
 ) {
     this->setUniform(uniform, (int) textures.size());
 
-    /** @TODO this doesn't seem to work, most textures have alpha data but aren't actually transparent. */
+    /* @TODO this doesn't work, most textures have alpha but aren't *actually* transparent. */
     /** Maybe just set `transparent` manually. */
     // if (texture->m_format == GL_RGBA)
     //     transparent = true;

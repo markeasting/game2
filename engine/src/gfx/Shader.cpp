@@ -23,8 +23,15 @@ Shader::~Shader() {
 
 GLuint Shader::createProgram() {
 
-    GLuint vert = compile(Shader::shaderBasePath + m_vertexShaderPath, GL_VERTEX_SHADER);
-    GLuint frag = compile(Shader::shaderBasePath + m_fragmentShaderPath, GL_FRAGMENT_SHADER);
+    GLuint vert = compile(
+        Shader::shaderBasePath + m_vertexShaderPath, 
+        GL_VERTEX_SHADER
+    );
+
+    GLuint frag = compile(
+        Shader::shaderBasePath + m_fragmentShaderPath, 
+        GL_FRAGMENT_SHADER
+    );
 
     if (vert == 0 || frag == 0) {
         return 0;
@@ -38,7 +45,8 @@ GLuint Shader::createProgram() {
     glLinkProgram(program_id);
     glValidateProgram(program_id);
 
-    /* Clean up vert/frag partials - maybe keep these during 'init' to speed up compilation */
+    /* Clean up vert/frag partials */
+    /* Maybe keep/store these in a cache such that they can be re-used. */
     glDeleteShader(vert);
     glDeleteShader(frag);
     glDetachShader(program_id, vert);

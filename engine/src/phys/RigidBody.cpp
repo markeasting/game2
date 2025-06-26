@@ -1,50 +1,22 @@
 #include "phys/RigidBody.h"
-#include "component/Transform.h"
+
 #include "gameobject/GameObject.h"
+#include "component/Transform.h"
+#include "component/Mesh.h"
 
 #include <cstdio>
 #include <stdexcept>
 
-// RigidBody::RigidBody(Ref<Mesh> mesh, bool isConvex)
-//     : mesh(mesh) 
-// {
-
-//     assert(mesh != nullptr);
-
-//     if (this->collider == nullptr) {
-//         this->collider = ref<MeshCollider>(mesh->m_geometry, isConvex);
-//     }
-
-//     this->mesh->m_managedByRigidBody = true;
-//     this->pose.p = mesh->getPosition();
-//     this->pose.q = mesh->getRotation();
-
-//     this->updateCollider();
-// }
-
 RigidBody::RigidBody(Ref<Collider> collider)
     : collider(collider) 
 {
-
-    // if (this->collider == nullptr) {
-    //     this->collider = ref<MeshCollider>(mesh->m_geometry);
-    // }
-
     assert(collider != nullptr);
-
-    // if (mesh) {
-    //     // this->mesh->m_managedByRigidBody = true;
-    //     // this->pose.p = mesh->getPosition();
-    //     // this->pose.q = mesh->getRotation();
-    //     this->setMesh(mesh);
-    // }
 
     this->updateCollider();
 }
 
 void RigidBody::onCreate() {
-    std::cout << "[RigidBody] Created RigidBody" << std::endl;
-
+    
     auto mesh = gameObject->tryGetComponent<Mesh>();
 
     if (mesh) {
@@ -114,7 +86,10 @@ RigidBody RigidBody::applyTorque(const vec3& torque) {
     return *this;
 }
 
-void RigidBody::applyRotation(const vec3& rot, float scale) {
+void RigidBody::applyRotation(
+    const vec3& rot, 
+    float scale
+) {
 
     // Safety clamping. This happens very rarely if the solver
     // wants to turn the body by more than 30 degrees in the
@@ -207,13 +182,18 @@ void RigidBody::update(const float dt) {
         dq.z * 2.0f / dt
     );
 
+    // @TODO just do omega = -omega?
     if (dq.w < 0.0f)
-        this->omega = vec3(-this->omega.x, -this->omega.y, -this->omega.z); // @TODO just omega = -omega?
+        this->omega = vec3(-this->omega.x, -this->omega.y, -this->omega.z); 
 
     this->updateCollider();
 }
 
-void RigidBody::applyCorrection(const vec3& corr, const vec3& pos, bool velocityLevel) {
+void RigidBody::applyCorrection(
+    const vec3& corr, 
+    const vec3& pos, 
+    bool velocityLevel
+) {
 
     if (!this->isDynamic) 
         return;
@@ -246,7 +226,10 @@ void RigidBody::applyCorrection(const vec3& corr, const vec3& pos, bool velocity
         this->applyRotation(dq);
 }
 
-RigidBody RigidBody::setBox(const vec3& size, float density) {
+RigidBody RigidBody::setBox(
+    const vec3& size, 
+    float density
+) {
 
     float mass = size.x * size.y * size.z * density;
     this->invMass = 1.0f / mass;
@@ -284,7 +267,10 @@ RigidBody RigidBody::setColliderOffset(const vec3& offset) {
     return *this;
 }
 
-float RigidBody::getInverseMass(const vec3& normal, const vec3& pos) const {
+float RigidBody::getInverseMass(
+    const vec3& normal, 
+    const vec3& pos
+) const {
 
     if (!this->isDynamic)
         return 0.0f;
@@ -312,7 +298,9 @@ float RigidBody::getInverseMass(const vec3& normal, const vec3& pos) const {
     return w;
 }
 
-vec3 RigidBody::getVelocityAt(const vec3& pos, bool beforeSolve) const {
+vec3 RigidBody::getVelocityAt(
+    const vec3& pos
+) const {
 
     if (!this->isDynamic)
         return vec3(0.0f);
@@ -341,7 +329,7 @@ void RigidBody::updateGeometry() {
         transform->setRotation(this->pose.q);
     }
 
-    /* Debug collider mesh - @todo move to component */
+    /* Debug collider mesh - @todo move to separate component */
     // if (this->collider->m_mesh != nullptr) {
     //     this->collider->m_mesh->setPosition(this->collider->m_relativePosW);
     //     this->collider->m_mesh->setRotation(this->pose.q);

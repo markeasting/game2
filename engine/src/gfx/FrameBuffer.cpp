@@ -68,12 +68,16 @@ void FrameBuffer::create(
     
 }
 
-void FrameBuffer::invalidate() const {
+void FrameBuffer::invalidate() {
     if (m_fbo != 0) {
+        printf("[FrameBuffer] Invalidating framebuffer %d\n", m_fbo);
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0); 
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glDeleteFramebuffers(1, &m_fbo);
         glDeleteRenderbuffers(1, &m_rbo);
+
+        // m_texture.invalidate(); // Also handled by texture load(). So, the texture still exists but will be reloaded once create() is called. 
     }
 }
 

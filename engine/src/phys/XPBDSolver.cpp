@@ -95,7 +95,7 @@ void XPBDSolver::update(
             continue;
                 
         /* (3.5) k * dt * vbody */
-        body->collider->expandAABB(2.0f * dt * body->velocity());
+        body->collider->expandAABB(2.0f * dt * body->velocity()); // should be part of collectCollisionPairs()
 
         /* Reset forces */
         body->force = vec3(0.0f);
@@ -106,7 +106,10 @@ void XPBDSolver::update(
     }
 }
 
-std::vector<CollisionPair> XPBDSolver::collectCollisionPairs(const std::vector<Ref<RigidBody>>& rigidBodies, const float dt) {
+std::vector<CollisionPair> XPBDSolver::collectCollisionPairs(
+    const std::vector<Ref<RigidBody>>& rigidBodies, 
+    const float dt
+) {
 
     // @TODO Chunking / octree
     // https://github.com/mwarning/SimpleOctree/tree/master/src
@@ -183,7 +186,9 @@ std::vector<CollisionPair> XPBDSolver::collectCollisionPairs(const std::vector<R
     return collisions;
 }
 
-std::vector<Ref<ContactSet>> XPBDSolver::getContacts(const std::vector<CollisionPair>& collisions) {
+std::vector<Ref<ContactSet>> XPBDSolver::getContacts(
+    const std::vector<CollisionPair>& collisions
+) {
 
     std::vector<Ref<ContactSet>> contacts = {};
 
@@ -430,7 +435,10 @@ void XPBDSolver::_solveFriction(
     }
 }
 
-void XPBDSolver::solveVelocities(const std::vector<Ref<ContactSet>>& contacts, const float h) {
+void XPBDSolver::solveVelocities(
+    const std::vector<Ref<ContactSet>>& contacts, 
+    const float h
+) {
 
     /* (3.6) Velocity level */
 

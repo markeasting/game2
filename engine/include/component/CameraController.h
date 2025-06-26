@@ -9,8 +9,6 @@
 class CameraController : public Component {
 public:
 
-    // Ref<Camera> m_camera = nullptr;
-    
     float m_speed = 0.07; // 3.0f; (with dt)
     float m_fov = 70; // g_settings.fov;
     // float zoomspeed = 0.05f;
@@ -23,20 +21,8 @@ public:
     vec3 m_lookAtPos = vec3(0.0f, 0.0f, 0.0f);
     vec3 m_eulerRotation = vec3(-90.0f, 0.0f, 0.0f);
 
-    // mat4 m_viewMatrix = mat4(1.0f);
-    // mat4 m_projectionMatrix = mat4(1.0f);
-    // mat4 m_viewProjectionMatrix = mat4(1.0f);
-
     CameraController() = default;
-
-    ~CameraController();
-
-    // @todo redirect to Camera methods
-    // void setSize(float frameBufferWidth, float frameBufferHeight);
-    // inline vec3 getForward() { return front; }
-    // inline vec3 getUp() { return up; }
-    // inline vec3 getRight() { return right; }
-    // void bind() const;
+    ~CameraController() = default;
 
     void update(float time, float dt) override;
 };

@@ -20,8 +20,10 @@ Geometry::Geometry() {
 //     this->setData(vbo, ibo);
 // }
 
-Geometry::Geometry(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &indices) 
-    : Geometry() /* Delegate VAO creation to base constructor */
+Geometry::Geometry(
+    const std::vector<Vertex> &vertices, 
+    const std::vector<unsigned int> &indices
+) : Geometry() /* Delegate VAO creation to base constructor */
 {
     this->setData(
         ref<VertexBuffer>(vertices), 
@@ -29,8 +31,9 @@ Geometry::Geometry(const std::vector<Vertex> &vertices, const std::vector<unsign
     );
 }
 
-Geometry::Geometry(const obj::Model &objModel) 
-    : Geometry() /* Delegate VAO creation to base constructor */
+Geometry::Geometry(
+    const obj::Model &objModel
+) : Geometry() /* Delegate VAO creation to base constructor */
 {
 
     std::vector<Vertex> vertices;
@@ -75,8 +78,11 @@ Geometry::Geometry(const obj::Model &objModel)
     );
 }
 
-void Geometry::setData(Ref<VertexBuffer> vbo, Ref<IndexBuffer> ibo) {
-    
+void Geometry::setData(
+    Ref<VertexBuffer> vbo, 
+    Ref<IndexBuffer> ibo
+) {
+
     bind(); // Make sure VAO is bound before setting buffers
 
     m_vertexBuffer = vbo;

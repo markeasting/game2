@@ -37,7 +37,11 @@ SphereCollider::SphereCollider(const float diameter) {
 }
 
 MeshCollider::MeshCollider(Ref<Geometry> geometry, bool isConvex) {
-    m_type = isConvex ? ColliderType::CONVEX_MESH : ColliderType::INEFFICIENT_MESH;
+    
+    m_type = isConvex 
+        ? ColliderType::CONVEX_MESH 
+        : ColliderType::INEFFICIENT_MESH;
+
     setGeometry(geometry);
 }
 

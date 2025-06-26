@@ -7,15 +7,19 @@
 
 Renderer::Renderer(RendererConfig config): m_config(config) {
     
-    // if (GLVersion.major > 4 && GLVersion.minor >= 3) {
-    //     glDebugMessageCallback(GlDebugMsg, nullptr);
-    //     glEnable(GL_DEBUG_OUTPUT);
-    //     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    // }
+    GLint gl_major = 0, gl_minor = 0;
+    glGetIntegerv(GL_MAJOR_VERSION, &gl_major);
+    glGetIntegerv(GL_MINOR_VERSION, &gl_minor);
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // background color
+    if (gl_major > 4 && gl_minor >= 3) {
+        glDebugMessageCallback(GlDebugMsg, nullptr);
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    }
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Wireframe GL_LINE ->> https://vitaliburkov.wordpress.com/2016/09/17/simple-and-fast-high-quality-antialiased-lines-with-opengl/
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_CULL_FACE);
 
 	glEnable(GL_DEPTH_TEST);

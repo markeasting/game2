@@ -27,7 +27,10 @@ void PhysicsHandler::add(Ref<RigidBody> body) {
 
 // This entire loop should probably be running on a separate thread.
 // https://medium.com/@cancerian0684/singleton-design-pattern-and-how-to-make-it-thread-safe-b207c0e7e368
-void PhysicsHandler::update(float dt, std::function<void(float)> onSubstep) {
+void PhysicsHandler::update(
+    float dt, 
+    std::function<void(float)> onSubstep
+) {
 
     XPBDSolver::update(m_bodies, m_constraints, dt, onSubstep);
 
@@ -58,54 +61,15 @@ void PhysicsHandler::update(float dt, std::function<void(float)> onSubstep) {
 //     );
 // }
 
-/** Moller–Trumbore algorithm */
 static bool rayTriangleIntersect(
     const vec3 &ro,
     const vec3 &rd,
     const std::array<vec3, 4> &triangle,
     float &d
 ) { 
-
     vec2 bary;
 
     return glm::intersectRayTriangle(ro, rd, triangle[0], triangle[1], triangle[2], bary, d);
-
-    // const float EPS = 0.000001f;
-
-    // const vec3& vertex0 = triangle[0];
-    // const vec3& vertex1 = triangle[1];
-    // const vec3& vertex2 = triangle[2];
-
-    // vec3 edge1, edge2, h, s, q;
-    // float a, f, u, v;
-
-    // edge1 = vertex1 - vertex0;
-    // edge2 = vertex2 - vertex0;
-    // h = glm::cross(rd, edge2);
-    // a = glm::dot(edge1, h);
-
-    // if (a > -EPS && a < EPS)
-    //     return false;
-
-    // f = 1.0f / a;
-    // s = ro - vertex0;
-    // u = f * glm::dot(s, h);
-
-    // if (u < 0.0f || u > 1.0f)
-    //     return false;
-
-    // q = glm::cross(s, edge1);
-    // v = f * glm::dot(rd, q);
-
-    // if (v < 0.0f || u + v > 1.0f)
-    //     return false;
-
-    // d = f * glm::dot(edge2, q);
-
-    // if (d > EPS)
-    //     return true;
-
-    // return false;
 }
 
 RaycastInfo PhysicsHandler::raycast(const vec3& ray_origin, const vec3& ray_dir) const {

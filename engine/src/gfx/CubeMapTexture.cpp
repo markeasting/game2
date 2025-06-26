@@ -58,6 +58,8 @@ void CubeMapTexture::loadCubemap(const std::array<std::string, 6>& faces) {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    /* Unbind after completing tasks */
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 void CubeMapTexture::bind() const {

@@ -2,7 +2,7 @@
 
 #include "phys/RigidBody.h"
 #include "phys/Constraint.h"
-#include "obj/Mesh.h"
+#include "component/Mesh.h"
 
 #include <vector>
 #include <functional>

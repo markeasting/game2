@@ -27,7 +27,7 @@ Window::Window(WindowConfig m_config) {
 
     if (!m_window) {
         throw std::runtime_error(
-            std::string("[Window] Window could not be created: ") + SDL_GetError()
+            std::string("[Window] Creation error: ") + SDL_GetError()
         );
     }
 
@@ -99,7 +99,7 @@ void Window::initializeOpenGL() {
 
     std::cout << "[OpenGL] Device:  " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "[OpenGL] Version: " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "[OpenGL] Window:  " << m_frameBufferWidth << " x " << m_frameBufferHeight << std::endl;
+    std::cout << "[OpenGL] Framebuffer:  " << m_frameBufferWidth << " x " << m_frameBufferHeight << std::endl;
 }
 
 std::tuple<int, int> Window::handleResize() {

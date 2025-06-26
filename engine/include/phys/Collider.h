@@ -1,7 +1,7 @@
 #pragma once
 
 #include "geom/Geometry.h"
-#include "obj/Mesh.h"
+#include "component/Mesh.h"
 
 #include "phys/Pose.h"
 #include "phys/AABB.h"

@@ -14,7 +14,6 @@ class Renderer;
 class Geometry {
 public:
 
-    /* @TODO make these unique ptr? This class should 'own' the buffers */
     Geometry();
     Geometry(Ref<VertexBuffer> vbo, Ref<IndexBuffer> ibo = nullptr);
     Geometry(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &indices = {});
@@ -34,11 +33,12 @@ public:
     bool hasIndices() const { return m_indexBuffer != nullptr; }
 
 // protected:
+    /* @TODO make these unique ptr? This class should 'own' the buffers */
     Ref<IndexBuffer> m_indexBuffer = nullptr;
     Ref<VertexBuffer> m_vertexBuffer = nullptr;
     // Ref<BufferObject<float>> m_vertexBuffer = nullptr;
 
-private:
+protected:
     friend Renderer;
 
     GLuint m_vao = 0;

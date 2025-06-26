@@ -15,6 +15,10 @@ public:
     Shader(const std::string& shaderName);
     ~Shader();
 
+    /**
+     * @brief Gets the location of a uniform variable in the shader program.
+     * @param name The name of the uniform variable. 
+     */
     GLint getUniformLocation(const std::string& name);
     
     const void bind() const;
@@ -29,6 +33,17 @@ private:
 
     std::unordered_map<std::string, int> uniformLocationCache = {};
 
-    GLuint createProgram();
+    /** 
+     * @brief Compiles a shader from the given source files.
+     * @param shaderSource The path to the shader source file.
+     * @param type The type of shader (GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, etc.).
+     * @return The shader ID if compilation was successful, 0 otherwise.
+     */
     GLuint compile(const std::string& shaderSource, GLenum type);
+
+    /**
+     * @brief Creates a shader program by linking the vertex and fragment shaders.
+     * @return The shader program ID if linking was successful, 0 otherwise.
+     */
+    GLuint createProgram();
 };

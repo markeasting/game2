@@ -33,8 +33,6 @@ void Camera::bind() const {
 
 void Camera::update(float time, float dt) {
 
-    // GameObject::update(time, dt);
-
     auto transform = gameObject->getComponent<Transform>();
 
     // front = glm::normalize(_front); // set by camera controller
