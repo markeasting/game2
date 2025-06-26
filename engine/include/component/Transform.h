@@ -12,15 +12,12 @@ public:
     Transform() = default;
     virtual ~Transform() {};
     
-    // const char* name = "";
-    // const char* type = "Transform"; // @TODO make enum or use instanceof?
-
     bool m_useProjectionMatrix = true;
 
     Transform* m_parent = nullptr;
     std::vector<Ref<Transform>> m_children = {};
 
-    // @TODO convert these to chaining pattern
+    // @TODO convert these to chaining pattern?
     // https://levelup.gitconnected.com/how-to-implement-method-chaining-in-c-3ec9f255972a
     void add(Ref<Transform> object);
     

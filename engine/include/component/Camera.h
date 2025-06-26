@@ -2,7 +2,6 @@
 
 #include "common/glm.h"
 
-// #include "gameobject/GameObject.h"
 #include "component/Component.h"
 #include "gfx/FrameBuffer.h"
 
@@ -16,12 +15,8 @@ class Camera : public Component {
 public:
 
     CameraSettings m_settings;
-    
-    // float m_near = 0.01f; // g_settings.cameraNear;
-    // float m_far = 500.0f; // g_settings.cameraFar;
-    // float m_fov = 70.0f; // g_settings.fov;
 
-    // @todo pass with a uniform buffer object
+    // @todo pass matrices with a uniform buffer object
     mat4 m_viewMatrix = mat4(1.0f);
     mat4 m_projectionMatrix = mat4(1.0f);
     mat4 m_viewProjectionMatrix = mat4(1.0f);
@@ -37,7 +32,6 @@ public:
         const int frameBufferHeight
     );
 
-    // vec3 getOrientation(); // @TODO use in audio listener setOrientation()
     inline vec3 getForward() { return front; }
     inline vec3 getUp() { return up; }
     inline vec3 getRight() { return right; }

@@ -16,7 +16,7 @@ public:
     /* @todo add 'mode' enum instead of booleans */
     bool m_enableFreeCam = true;
     bool m_autoRotate = false;
-    float m_camRadius = 10.0f; // only used in auto-rotate mode -> move to other controller / component
+    float m_camRadius = 10.0f;
 
     vec3 m_lookAtPos = vec3(0.0f, 0.0f, 0.0f);
     vec3 m_eulerRotation = vec3(-90.0f, 0.0f, 0.0f);
