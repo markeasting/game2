@@ -65,6 +65,8 @@ public:
         m_count = data.size();
         m_size = m_count * sizeof(T);
         // this->set(data); // Must be called from Derived class...?
+
+        glGenBuffers(1, &m_buffer);
     }
 
     /* Write data to an OpenGL Buffer Object. Assumes a VAO is bound when invoked. */
@@ -83,11 +85,12 @@ public:
         // glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
         // assert(vao != 0 && "IndexBuffer - A VAO must be bound before using IndexBuffer.");
 
-        if (m_buffer == 0) 
-            glGenBuffers(1, &m_buffer);
+        // if (m_buffer == 0) 
+        //     glGenBuffers(1, &m_buffer);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffer);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_size, &m_data[0], m_usage);
+        // glNamedBufferData(m_buffer, m_size, &m_data[0], m_usage); // DSA
     }
 
     // void bind() override {
@@ -107,11 +110,12 @@ public:
         // glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
         // assert(vao != 0 && "VertexBuffer - A VAO must be bound before using VertexBuffer.");
 
-        if (m_buffer == 0) 
-            glGenBuffers(1, &m_buffer);
+        // if (m_buffer == 0) 
+        //     glGenBuffers(1, &m_buffer);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
         glBufferData(GL_ARRAY_BUFFER, m_size, &m_data[0], m_usage);
+        // glNamedBufferData(m_buffer, m_size, &m_data[0], m_usage); // DSA
     }
 
     // void bind() override {
