@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <cstdio>
 
 #include "common/ref.h"
 #include "core/Window.h"
@@ -82,15 +83,19 @@ int main() {
             ref<Mesh>(ref<TetrahedronGeometry>(1.0f), colorMaterial)
         });
         
-        gameObjects.push_back(tetra);
-
         tetra->m_transform->setPosition({ 0.0f, 1.0f, -2.0f });
 
-        // auto box = GameObject("Box", {
-        //     ref<Mesh>(BoxGeometry(), textureMaterial)
-        // });
-        // box.m_transform->setPosition({ 0.0f, 2.0f, -3.0f });
-        // gameObjects.push_back(box);
+        gameObjects.push_back(tetra);
+
+        auto box = ref<GameObject>("Box", std::vector<Ref<Component>>{
+            ref<Mesh>(BoxGeometry(), textureMaterial)
+        });
+        box->m_transform->setPosition({ 0.0f, 1.0f, -1.5f });
+        box->m_transform->setScale(vec3(0.5f, 0.5f, 0.5f));
+
+        tetra->m_transform->add(box->m_transform);
+
+        gameObjects.push_back(box);
 
         Material skyMaterial = Material(ref<Shader>("SkyBox"));
         Ref<CubeMapTexture> skyTexture = ref<CubeMapTexture>();
@@ -246,6 +251,9 @@ int main() {
 
             float osc = sin(time * 1.5f) / 2.0f + 0.5f;
             colorMaterial.setUniform("u_color", vec4(0.0f, osc, 0.8f, 1.0f));
+
+            tetra->m_transform->setPosition({ 0.0f, 1.0f + osc, -2.0f });
+            tetra->m_transform->setRotation(vec3(0.0f, time * 50.0f, 0.0f));
 
             phys.update(dt, [&](float dt) {});
 

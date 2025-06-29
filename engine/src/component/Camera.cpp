@@ -38,9 +38,11 @@ void Camera::update(float time, float dt) {
     // front = glm::normalize(_front); // set by camera controller
     right = glm::normalize(glm::cross(front, vec3(0.0f, 1.0f, 0.0f)));
     up    = glm::normalize(glm::cross(right, front));
+
+    const auto&& pos = transform->getPosition();
     
     // m_viewMatrix = glm::lookAt(m_position, m_position + front, vec3(0.0, 1.0f, 0.0));
-    m_viewMatrix = glm::lookAt(transform->m_position, transform->m_position + front, up);
+    m_viewMatrix = glm::lookAt(pos, pos + front, up);
     
     m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
 }

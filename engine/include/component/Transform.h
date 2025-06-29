@@ -38,7 +38,7 @@ public:
 
     mat4 getWorldPositionMatrix();
 
-// protected:
+protected:
 
     vec3 m_position = vec3(0.0f, 0.0f, 0.0f);
     quat m_rotation = quat(1.0f, 0, 0, 0);

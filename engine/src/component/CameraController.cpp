@@ -18,16 +18,20 @@ void CameraController::update(float time, float dt) {
     auto transform  = gameObject->getComponent<Transform>();
     auto camera     = gameObject->getComponent<Camera>();
 
+    vec3 pos = transform->getPosition();
+
     /* @todo add 'mode' enum instead of booleans */
     if (m_autoRotate) {
 
         // m_camRadius = glm::distance(m_position, m_lookAtPos);
 
-        transform->m_position.x = sin(time) * m_camRadius;
-        transform->m_position.z = cos(time) * m_camRadius;
-        transform->m_position.y = 1.0f;
+        pos.x = sin(time) * m_camRadius;
+        pos.z = cos(time) * m_camRadius;
+        pos.y = 1.0f;
+        
+        transform->setPosition(pos);
 
-        camera->front = glm::normalize(m_lookAtPos - transform->m_position);
+        camera->front = glm::normalize(m_lookAtPos - pos);
 
     } else if (m_enableFreeCam) {
 
@@ -40,15 +44,17 @@ void CameraController::update(float time, float dt) {
 
         if (state[SDL_SCANCODE_LCTRL])
             posDelta *= 0.1f;
-
+            
         if (state[SDL_SCANCODE_W])
-            transform->m_position += camera->front * posDelta;
+            pos += camera->front * posDelta;
         if (state[SDL_SCANCODE_S])
-            transform->m_position -= camera->front * posDelta;
+            pos -= camera->front * posDelta;
         if (state[SDL_SCANCODE_A])
-            transform->m_position -= camera->right * posDelta;
+            pos -= camera->right * posDelta;
         if (state[SDL_SCANCODE_D])
-            transform->m_position += camera->right * posDelta;
+            pos += camera->right * posDelta;
+
+        transform->setPosition(pos);
 
         int x, y;
         SDL_GetRelativeMouseState(&x, &y);
