@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
-#include <cstdio>
 
 #include "common/ref.h"
 #include "core/Window.h"
+#include "util/VectorMath.h"
 
 #include "gfx/Renderer.h"
 #include "gfx/CubeMapTexture.h"
@@ -13,12 +13,24 @@
 
 #include "phys/PhysicsHandler.h"
 #include "phys/RigidBody.h"
-#include "util/VectorMath.h"
 
 #include "gameobject/GameObject.h"
 #include "component/CameraController.h"
 
+#include "imgui.h"
+#include "backends/imgui_impl_sdl2.h"
+#include "backends/imgui_impl_opengl3.h"
+
 int main() {
+
+    /* Event loop */
+    bool quit = false;
+    SDL_Event e;
+
+    /* Timer */
+    float time = 0.0f;
+    float prevTime = 0.0f;
+    float dt = 0.0f;
 
     try {
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0) {
@@ -29,12 +41,20 @@ int main() {
         
         Window window({
             .windowTitle = "MOIII",
-            .windowWidth = 500,
-            .windowHeight = 500,
+            .windowWidth = 768,
+            .windowHeight = 768,
             .fullscreen = false,
             .vsync = true
         });
 
+        /* Init GUI */
+        ImGui::CreateContext();
+        // ImGuiIO& io = ImGui::GetIO(); (void)io;
+        ImGui::StyleColorsDark();
+        ImGui_ImplSDL2_InitForOpenGL(window.getSDLWindow(), window.getGLContext());
+        ImGui_ImplOpenGL3_Init("#version 330 core");
+
+        /* Initialize renderer */
         Renderer renderer = Renderer({
             .wireframe = false,
             .useRenderpass = true
@@ -45,6 +65,11 @@ int main() {
             window.getFrameBufferHeight()
         );
 
+        /* Initialize physics */
+        PhysicsHandler phys;
+        phys.init();
+
+        /* Scene / hierarchy */
         std::vector<Ref<GameObject>> gameObjects;
         
         auto cameraObject = ref<GameObject>("Camera", std::vector<Ref<Component>>{
@@ -58,8 +83,9 @@ int main() {
 
         auto camera = cameraObject->getComponent<Camera>();
         auto camController = cameraObject->getComponent<CameraController>();
+        
+        camController->m_autoRotate = true;
 
-        // camera->m_autoRotate = true;
         camera->setSize(
             window.getFrameBufferWidth(),
             window.getFrameBufferHeight()
@@ -115,9 +141,7 @@ int main() {
 
         gameObjects.push_back(skybox);
 
-        PhysicsHandler phys;
-        phys.init();
-
+        /* Physics bodies */
         Ref<RigidBody> player = nullptr;
 
         const float size = 0.5f;
@@ -142,13 +166,6 @@ int main() {
                 player = body;
         }
 
-        // debug box[0] in gameobjects 
-        // find first 'Box' name in gameObjects
-        // auto debugBox = std::find_if(gameObjects.begin(), gameObjects.end(), [](const GameObject& obj) {
-        //     return obj.name == "Box";
-        // });
-
-        ////////////////////////////////////////////////
         auto floor = ref<GameObject>("Floor", std::vector<Ref<Component>>{
             ref<Mesh>(PlaneGeometry(300.0f, 300.0f), colorMaterial2),
             ref<RigidBody>()
@@ -157,34 +174,9 @@ int main() {
 
         floorBody->setPosition({ 0.0f, 0.0f, 0.0f });
         floorBody->setRotation(QuatFromTwoVectors(vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f)));
-
-        // floorBody->staticFriction = 0.8f;
-        // floorBody->dynamicFriction = 0.8f;
         floorBody->makeStatic();
 
         gameObjects.push_back(floor);
-        
-        // meshes.push_back(floor->getComponent<Mesh>());
-        
-        // auto car = ref<Car>(phys);
-        // phys.add(car->m_body);
-        // meshes.push_back(car->m_body->mesh);
-        // meshes.push_back(car->m_bodyShadow);
-        // for (auto& wheel : car->m_wheels) {
-        //     meshes.push_back(wheel.m_mesh);
-        //     meshes.push_back(wheel.m_origin);
-        //     meshes.push_back(wheel.m_line);
-        //     meshes.push_back(wheel.m_line2);
-        // }
-
-        /* Event loop */
-        bool quit = false;
-        SDL_Event e;
-
-        /* Timer */
-        float time = 0.0f;
-        float prevTime = 0.0f;
-        float dt = 0.0f;
         
         /* get all mesh components from all game objects */
         std::vector<Ref<Mesh>> meshes;
@@ -199,13 +191,18 @@ int main() {
             }
         }
 
+        /* Main loop */
         while (!quit) {
-        
+
+            /* Update timer */
             prevTime = time;
             time = SDL_GetTicks() / 1000.0f;
             dt = time - prevTime;
             
+            /* Event polling */
             while (SDL_PollEvent(&e)) {
+
+                ImGui_ImplSDL2_ProcessEvent(&e);
                 
                 if (e.type == SDL_KEYDOWN) {
                     std::cout << "Key pressed: " << e.key.keysym.sym << std::endl;
@@ -217,9 +214,9 @@ int main() {
                 } else if (e.type == SDL_MOUSEBUTTONDOWN) {
                     std::cout << "Mouse button pressed: " << e.button.button << std::endl;
 
-                    if (e.button.button == SDL_BUTTON_LEFT) {
-                        camController->m_autoRotate = !camController->m_autoRotate;
-                    }
+                    // if (e.button.button == SDL_BUTTON_LEFT) {
+                    //     camController->m_autoRotate = !camController->m_autoRotate;
+                    // }
                 
                 } else if (e.type == SDL_WINDOWEVENT) {
                     if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
@@ -240,6 +237,7 @@ int main() {
                 }
             }
 
+            /* Game loop */
             const Uint8* state = SDL_GetKeyboardState(NULL);
 
             if (state[SDL_SCANCODE_SPACE])
@@ -259,16 +257,37 @@ int main() {
             tetra->m_transform->setPosition({ 0.0f, 1.0f + osc, -2.0f });
             tetra->m_transform->setRotation(vec3(0.0f, time * 50.0f, 0.0f));
 
+            /* Core update */
             phys.update(dt, [&](float dt) {});
 
             for (auto& obj : gameObjects) {
                 obj->update(time, dt);
             }
 
-            // renderer.draw(scene, camera);
             renderer.draw(meshes, camera);
-
             // renderer.clear(); // used internally in Renderer::render()
+
+            /* GUI */
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplSDL2_NewFrame();
+            ImGui::NewFrame();
+            
+            ImGui::Begin("GUI");
+            ImGui::BulletText("time: %.2fs", time);
+            ImGui::BulletText("fps: %.1f", ImGui::GetIO().Framerate);
+            ImGui::BulletText("dt: %.3f", dt);
+            
+            ImGui::Separator();
+
+            if (ImGui::Button("Refresh Shaders")) {
+                Shader::refreshAll();
+            }
+
+            ImGui::End();
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            /* Swap buffers / main loop end */
             window.swapBuffers();
         }
     } catch (const std::exception &e) {

@@ -31,12 +31,6 @@ public:
     ~Window();
 
     /**
-     * @brief Gets the SDL window instance.
-     * @return Pointer to the SDL_Window.
-     */
-    SDL_Window* getSDLWindow() const;
-
-    /**
      * @brief Swaps the front and back buffers.
      */
     void swapBuffers();
@@ -49,15 +43,23 @@ public:
 
     /**
      * @brief Gets the framebuffer width.
-     * @return framebuffer width.
      */
     int getFrameBufferWidth() const { return m_frameBufferWidth; }
 
     /**
      * @brief Gets the framebuffer height.
-     * @return framebuffer height.
      */
     int getFrameBufferHeight() const { return m_frameBufferHeight; }
+
+    /**
+     * @brief Gets the SDL OpenGL context.
+     */
+    SDL_GLContext getGLContext() const { return m_glContext; }
+
+    /**
+     * @brief Gets the SDL Window pointer
+     */
+    SDL_Window* getSDLWindow() const { return m_window; }
 
 private:
 

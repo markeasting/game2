@@ -39,10 +39,6 @@ Window::~Window() {
     SDL_DestroyWindow(m_window);
 }
 
-SDL_Window* Window::getSDLWindow() const {
-    return m_window;
-}
-
 void Window::initializeOpenGL() {
     
     /* Context flags */
