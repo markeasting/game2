@@ -5,15 +5,23 @@
 #include <string>
 #include <unordered_map>
 #include <cassert>
+#include <vector>
 
 class Shader {
 public:
+
     GLuint m_program = 0;
 
     Shader(); 
     Shader(const std::string& vertexShader, const std::string& fragmentShader);
     Shader(const std::string& shaderName);
     ~Shader();
+
+    /**
+     * @brief Initializes the shader program by compiling and  
+     * linking the vertex and fragment shaders.
+     */
+    void initialize();
 
     /**
      * @brief Gets the location of a uniform variable in the shader program.
@@ -24,13 +32,12 @@ public:
     const void bind() const;
     const void unBind() const;
 
-    // void refresh();
-    // static void refreshAll();
+    static void refreshAll();
 
 private:
 
     // static std::unordered_map<std::string, GLint> m_shaderCache;
-    // static std::vector<Shader*> m_programCache; // glGetProgramBinary()
+    static std::vector<Shader*> m_programCache; // glGetProgramBinary()
 
     static constexpr const char* shaderBasePath = "assets/shader/";
 
@@ -42,7 +49,7 @@ private:
     /** 
      * @brief Compiles a shader from the given source files.
      * @param shaderSource The path to the shader source file.
-     * @param type The type of shader (GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, etc.).
+     * @param type The shader type for glCreateShader(): GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, etc.
      * @return The shader ID if compilation was successful, 0 otherwise.
      */
     static GLuint compile(

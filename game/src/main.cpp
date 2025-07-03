@@ -210,9 +210,9 @@ int main() {
                 if (e.type == SDL_KEYDOWN) {
                     std::cout << "Key pressed: " << e.key.keysym.sym << std::endl;
 
-                    // if (e.key.keysym.sym == SDLK_p) {
-                    //     Shader::refreshAll();
-                    // }
+                    if (e.key.keysym.sym == SDLK_p) {
+                        Shader::refreshAll();
+                    }
                 
                 } else if (e.type == SDL_MOUSEBUTTONDOWN) {
                     std::cout << "Mouse button pressed: " << e.button.button << std::endl;

@@ -1,9 +1,10 @@
 
 #include "gfx/Shader.h"
 #include "util/Filesystem.h"
+#include <cstdio>
 
 /* Init static members */
-// std::vector<Shader*> Shader::m_programCache;
+std::vector<Shader*> Shader::m_programCache;
 
 Shader::Shader() {}
 
@@ -13,9 +14,9 @@ Shader::Shader(
     // bool autoCompile
 ) : m_vertexShaderPath(vertexShader), m_fragmentShaderPath(fragmentShader) {
     
-    m_program = createProgram(m_vertexShaderPath, m_fragmentShaderPath);
+    initialize();
     
-    // Shader::m_programCache.push_back(this);
+    Shader::m_programCache.push_back(this);
 }
 
 Shader::Shader(
@@ -151,24 +152,30 @@ const void Shader::unBind() const {
     glUseProgram(0);
 }
 
-// void Shader::refresh() {
-//     glUseProgram(0);
-//     glBindVertexArray(0);
-
-//     glDeleteProgram(m_program);
-//     m_program = createProgram(m_fragmentShaderPath, m_vertexShaderPath);
-//     uniformLocationCache.clear(); // It'll rebuild the cache as needed
+void Shader::initialize() {
     
-//     printf("[Shader] Shader program refreshed.\n");
-// }
+    if (m_program != 0) {
+        glUseProgram(0);
+        glDeleteProgram(m_program);
+    }
 
-// void Shader::refreshAll() {
-//     glUseProgram(0);
+    m_program = createProgram(m_vertexShaderPath, m_fragmentShaderPath);
+    uniformLocationCache.clear(); // It'll rebuild the cache as needed
 
-//     for (auto shader : Shader::m_programCache) {
-//         shader->refresh();
-//     }
-    
-//     Shader::m_programCache.clear();
-//     printf("[Shader] All shader programs refreshed.\n");
-// }
+    printf("[Shader] Shader program refreshed.\n");
+}
+
+void Shader::refreshAll() {
+
+    printf(Shader::m_programCache.empty() ? 
+        "[Shader] No shaders to refresh.\n" : 
+        "[Shader] Refreshing %zu shaders...\n", 
+        Shader::m_programCache.size()
+    );
+
+    for (auto shader : Shader::m_programCache) {
+        assert(shader != nullptr);
+
+        shader->initialize();
+    }
+}
