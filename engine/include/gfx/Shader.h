@@ -24,7 +24,13 @@ public:
     const void bind() const;
     const void unBind() const;
 
+    // void refresh();
+    // static void refreshAll();
+
 private:
+
+    // static std::unordered_map<std::string, GLint> m_shaderCache;
+    // static std::vector<Shader*> m_programCache; // glGetProgramBinary()
 
     static constexpr const char* shaderBasePath = "assets/shader/";
 
@@ -39,11 +45,17 @@ private:
      * @param type The type of shader (GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, etc.).
      * @return The shader ID if compilation was successful, 0 otherwise.
      */
-    GLuint compile(const std::string& shaderSource, GLenum type);
+    static GLuint compile(
+        const std::string& shaderSource,
+        GLenum type
+    );
 
     /**
      * @brief Creates a shader program by linking the vertex and fragment shaders.
      * @return The shader program ID if linking was successful, 0 otherwise.
      */
-    GLuint createProgram();
+    static GLuint createProgram(
+        const std::string& vertexShader, 
+        const std::string& fragmentShader
+    );
 };

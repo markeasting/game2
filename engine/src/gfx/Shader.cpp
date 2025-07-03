@@ -2,6 +2,9 @@
 #include "gfx/Shader.h"
 #include "util/Filesystem.h"
 
+/* Init static members */
+// std::vector<Shader*> Shader::m_programCache;
+
 Shader::Shader() {}
 
 Shader::Shader(
@@ -9,7 +12,10 @@ Shader::Shader(
     const std::string& fragmentShader
     // bool autoCompile
 ) : m_vertexShaderPath(vertexShader), m_fragmentShaderPath(fragmentShader) {
-    m_program = createProgram();
+    
+    m_program = createProgram(m_vertexShaderPath, m_fragmentShaderPath);
+    
+    // Shader::m_programCache.push_back(this);
 }
 
 Shader::Shader(
@@ -21,15 +27,18 @@ Shader::~Shader() {
     glDeleteProgram(m_program);
 }
 
-GLuint Shader::createProgram() {
+GLuint Shader::createProgram(
+    const std::string& vertexShader, 
+    const std::string& fragmentShader
+) {
 
     GLuint vert = compile(
-        Shader::shaderBasePath + m_vertexShaderPath, 
+        Shader::shaderBasePath + vertexShader, 
         GL_VERTEX_SHADER
     );
 
     GLuint frag = compile(
-        Shader::shaderBasePath + m_fragmentShaderPath, 
+        Shader::shaderBasePath + fragmentShader, 
         GL_FRAGMENT_SHADER
     );
 
@@ -46,11 +55,15 @@ GLuint Shader::createProgram() {
     glValidateProgram(program_id);
 
     /* Clean up vert/frag partials */
-    /* Maybe keep/store these in a cache such that they can be re-used. */
     glDeleteShader(vert);
     glDeleteShader(frag);
     glDetachShader(program_id, vert);
     glDetachShader(program_id, frag);
+
+    /* Maybe keep/store these in a cache such that they can be re-used. */
+    /* Or store the entire program binary using glGetProgramBinary() */
+    // m_shaderCache[m_vertexShaderPath] = vert;
+    // m_shaderCache[m_fragmentShaderPath] = frag;
 
     /* Check if shader linked successfully */
     int program_linked = 0;
@@ -70,7 +83,7 @@ GLuint Shader::createProgram() {
         return 0;
     }
 
-    printf("[Shader] Shader %u compiled.\n", program_id);
+    printf("[Shader] Program %u successfully linked.\n", program_id);
 
     return program_id;
 }
@@ -99,12 +112,14 @@ GLuint Shader::compile(
         char* message = (char*) malloc(length * sizeof(char));
         glGetShaderInfoLog(shaderId, length, &length, message);
 
-        printf("[Shader] '%s': %s", shaderSource.c_str(), message);
+        printf("[Shader] ERROR: '%s': %s", shaderSource.c_str(), message);
         
         glDeleteShader(shaderId);
         
         return 0;
     }
+
+    printf("[Shader] Compiled %s \n", shaderSource.c_str());
 
     return shaderId;
 }
@@ -135,3 +150,25 @@ const void Shader::bind() const {
 const void Shader::unBind() const {
     glUseProgram(0);
 }
+
+// void Shader::refresh() {
+//     glUseProgram(0);
+//     glBindVertexArray(0);
+
+//     glDeleteProgram(m_program);
+//     m_program = createProgram(m_fragmentShaderPath, m_vertexShaderPath);
+//     uniformLocationCache.clear(); // It'll rebuild the cache as needed
+    
+//     printf("[Shader] Shader program refreshed.\n");
+// }
+
+// void Shader::refreshAll() {
+//     glUseProgram(0);
+
+//     for (auto shader : Shader::m_programCache) {
+//         shader->refresh();
+//     }
+    
+//     Shader::m_programCache.clear();
+//     printf("[Shader] All shader programs refreshed.\n");
+// }
