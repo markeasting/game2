@@ -25,6 +25,11 @@ public:
     /** 
      * @brief Load texture data from a file or memory. 
      * @see glGenTextures / glTexImage2D
+     * @param width Width of the texture.
+     * @param height Height of the texture.
+     * @param format Format of the texture (e.g., GL_RGB, GL_RGBA).
+     * @param data Pointer to the texture data in memory.
+     * @note The data should be in the format specified by the format parameter.
      */
     void load(GLsizei width, GLsizei height, GLenum format, void* data);
 
@@ -45,8 +50,16 @@ public:
      */
     virtual void bind() const;
 
-    GLuint getTexture() const {
+    GLuint getId() const {
         return m_texture;
+    }
+
+    GLsizei getWidth() const {
+        return m_width;
+    }
+
+    GLsizei getHeight() const {
+        return m_height;
     }
 
 protected:

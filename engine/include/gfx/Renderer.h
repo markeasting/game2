@@ -5,6 +5,7 @@
 
 #include "component/Camera.h"
 #include "component/Mesh.h"
+#include "gfx/RenderPass.h"
 
 struct RendererConfig {
 	bool wireframe = false;
@@ -64,6 +65,10 @@ private:
 	 */
 	Mesh m_fullscreenQuad;
 	
+	// Material m_renderPassMaterial;
+
+	std::vector<RenderPass> m_renderPasses = {};
+
 };
 
 /**

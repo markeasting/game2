@@ -49,16 +49,33 @@ public:
 
     void assignUniform(const std::string name, Ref<IUniform> uniform);
     
+    /**
+     * @brief Assign (add) a texture to the material.
+     * @param texture The texture to assign.
+     * @param uniform The name of the uniform of the sampler in the shader.
+     * @note The texture will be assigned to the *next* available slot.
+     */
     void assignTexture(
         Ref<Texture> texture, 
         const std::string& uniform = "texture"
     );
 
+    /**
+     * @brief Assign (add) a texture to the material.
+     * @param source The path to the texture file.
+     * @param uniform The name of the uniform of the sampler in the shader.
+     * @note The texture will be assigned to the *next* available slot.
+     */
     void assignTexture(
         const char* source, 
         const std::string& uniform = "texture"
     );
     
+    /**
+     * glUseProgram()
+     * glActiveTexture()
+     * glBindTexture()
+     */
     void bind() const;
 
 private:

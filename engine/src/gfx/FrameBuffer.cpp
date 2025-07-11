@@ -35,7 +35,7 @@ void FrameBuffer::create(
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
-        m_texture.getTexture(),
+        m_texture.getId(),
         0
     );  
 
@@ -65,7 +65,12 @@ void FrameBuffer::create(
     /* In that case, get the default ID by calling glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO); */
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    
+
+    printf("[FrameBuffer] Created framebuffer %d with texture %d and renderbuffer %d\n", 
+        m_fbo, 
+        m_texture.getId(), 
+        m_rbo
+    );
 }
 
 void FrameBuffer::invalidate() {
@@ -86,9 +91,4 @@ void FrameBuffer::bind() const {
 
     /* Set new viewport if you want to render to a specific part of the screen */
     // glViewport(w, h)
-}
-
-GLuint FrameBuffer::getTexture() const {
-    // return m_textureColorbuffer;
-    return m_texture.getTexture();
 }

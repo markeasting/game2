@@ -4,6 +4,7 @@
 #include "gfx/Texture.h"
 
 /**
+ * Frame Buffer Object (fbo) for off-screen rendering.
  * https://learnopengl.com/Advanced-OpenGL/Framebuffers 
  */
 class FrameBuffer {
@@ -32,7 +33,13 @@ public:
 
     void bind() const;
 
-    GLuint getTexture() const;
+    /** @return fbo handle (Frame Buffer Object) */
+    GLuint getId() const { return m_fbo; }
+
+    GLuint getTexture() const { return m_texture.getId(); }
+
+    int getWidth() const { return m_texture.getWidth(); }
+    int getHeight() const { return m_texture.getHeight(); }
 
 protected:
 

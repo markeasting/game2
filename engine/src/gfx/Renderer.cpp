@@ -1,11 +1,16 @@
 
 #include "gfx/Renderer.h"
+#include "common/gl.h"
 #include "gfx/Material.h"
 
 #include "gameobject/GameObject.h"
 #include "component/Transform.h"
+#include "gfx/Shader.h"
+#include <cstdio>
 
-Renderer::Renderer(RendererConfig config): m_config(config) {
+Renderer::Renderer(RendererConfig config): 
+    m_config(config)
+{
     
     GLint gl_major = 0, gl_minor = 0;
     glGetIntegerv(GL_MAJOR_VERSION, &gl_major);
@@ -45,11 +50,14 @@ Renderer::Renderer(RendererConfig config): m_config(config) {
         std::vector<unsigned int>{ 0, 1, 2, 2, 1, 3 }
     );
 
-    auto renderPassShader = ref<Shader>("Basic.vert", "Renderpass.frag");
-
-    m_fullscreenQuad.setMaterial(Material(renderPassShader, {
-        { "u_color", uniform(vec4(1.0f, 0.0f, 0.8f, 1.0f)) },
-    }));
+    m_renderPasses = {
+        // RenderPass(ref<Shader>("Basic.vert", "renderpass/smear.frag"), {
+        //     .autoClear = false
+        // }),
+        RenderPass(ref<Shader>("Basic.vert", "renderpass/final.frag"), {
+            // .autoClear = false
+        }),
+    };
 }
 
 void Renderer::setSize(
@@ -61,6 +69,9 @@ void Renderer::setSize(
     
     glViewport(x, y, width, height);
 
+    for (auto& renderPass : m_renderPasses) {
+        renderPass.m_frameBuffer.create(width, height);
+    }
 }
 
 void Renderer::setSize(
@@ -70,66 +81,98 @@ void Renderer::setSize(
     
     glViewport(0, 0, width, height);
 
+    for (auto& renderPass : m_renderPasses) {
+        renderPass.m_frameBuffer.create(width, height);
+    }
 }
 
 void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
 
     assert(camera != nullptr);
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
     if (m_config.useRenderpass) {
         camera->m_frameBuffer.bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-        glEnable(GL_DEPTH_TEST);
+    } else {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
     
-    // for (auto const& [name, layer] : scene->m_layers.all()) {
-        
-    //     if (!layer->m_active)
-    //         continue;
+    /* Draw opaque meshes */
+    for (auto const& mesh : meshes) {
 
-        /* Draw opaque meshes */
-        for (auto const& mesh : meshes) {
+        if (mesh->m_material->transparent)
+            continue;
 
-            if (mesh->m_material->transparent)
-                continue;
+        this->drawMesh(mesh, camera);
 
-            this->drawMesh(mesh, camera);
+        // @TODO check if unbinding VAO / shader / texture is required
+        // Or if it has any impact on performance
+        // mesh->unbind(); 
+    }
 
-            // @TODO check if unbinding VAO / shader / texture is required
-            // Or if it has any impact on performance
-            // mesh->unbind(); 
-        }
+    /* Draw transparent meshes - @todo sort back-to-front */
+    for (auto const& mesh : meshes) {
 
-        /* Draw transparent meshes */
-        for (auto const& mesh : meshes) {
+        if (!mesh->m_material->transparent)
+            continue;
 
-            if (!mesh->m_material->transparent)
-                continue;
+        this->drawMesh(mesh, camera);
 
-            this->drawMesh(mesh, camera);
-
-            // @TODO check if unbinding VAO / shader / texture is required
-            // Or if it has any impact on performance
-            // mesh->unbind(); 
-        }
-    // }
+        // @TODO check if unbinding VAO / shader / texture is required
+        // Or if it has any impact on performance
+        // mesh->unbind(); 
+    }
 
     if (m_config.useRenderpass) {
+
+        /* Bind the default framebuffer */
+        /* @todo why not use FrameBuffer class? */
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // Bind the default framebuffer
+        // glClear(GL_COLOR_BUFFER_BIT); // Clear the color buffer for the final pass
     
-        /* Final render pass */
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glDisable(GL_DEPTH_TEST);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glEnable(GL_CULL_FACE);
+        /* Setup state */
+        glDisable(GL_DEPTH_TEST); // Disable depth test for the final pass
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Make sure 'wireframe' mode is disabled for the final pass
+        // glDisable(GL_CULL_FACE); // not really needed for fullscreen quad
+    
+        /* Draw the fullscreen quad */
+        for (int i = 0; i < m_renderPasses.size(); i++) {
+            
+            auto& renderPass = m_renderPasses[i];
 
-        m_fullscreenQuad.bind();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, camera->m_frameBuffer.getTexture());
+            /*
+             * On the first pass, use the camera's framebuffer,
+             * otherwise use the previous renderpass framebuffer.
+             */
+            const auto& readBuffer = (i == 0) 
+                ? camera->m_frameBuffer 
+                : m_renderPasses[i - 1].m_frameBuffer;
 
-        glDrawElements(GL_TRIANGLES, m_fullscreenQuad.m_geometry->m_indexBuffer->getCount(), GL_UNSIGNED_INT, 0);
+            renderPass.bind(readBuffer); 
+
+            // @todo maybe add the quad to the pass?
+            m_fullscreenQuad.setMaterial(renderPass.m_material);
+            m_fullscreenQuad.bind();
+
+            glDrawElements(GL_TRIANGLES, m_fullscreenQuad.m_geometry->m_indexBuffer->getCount(), GL_UNSIGNED_INT, 0);
+        }
+
+        /* Copy the final render pass by blitting */
+        const auto& finalRenderPass = m_renderPasses.back();
+        const auto& finalRenderBuffer = finalRenderPass.m_frameBuffer;
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, finalRenderBuffer.getId());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // default framebuffer
+        glBlitFramebuffer(
+            0, 0, finalRenderBuffer.getWidth(), finalRenderBuffer.getHeight(), // src rect
+            0, 0, finalRenderBuffer.getWidth(), finalRenderBuffer.getHeight(), // dst rect
+            GL_COLOR_BUFFER_BIT,       // What data to copy 
+            GL_NEAREST                 // Filtering 
+        );
+
+        /* Reset state */
+        glEnable(GL_DEPTH_TEST); 
+        // glEnable(GL_CULL_FACE);
     }
 
 }
