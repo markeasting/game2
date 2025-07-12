@@ -52,7 +52,9 @@ Renderer::Renderer(RendererConfig config):
 
     m_renderPasses = {
         RenderPass(Material(ref<Shader>("Basic.vert", "renderpass/smear.frag"), {
-            { "u_smearAlpha", ref<Uniform<float>>(0.1f) }
+            { "u_smearAlpha", ref<Uniform<float>>(0.1f) },
+            { "u_smearStart", ref<Uniform<float>>(0.0f) },
+            { "u_smearEnd", ref<Uniform<float>>(0.5f) },
         }), {
             .autoClear = false
         }),
