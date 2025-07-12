@@ -3,7 +3,10 @@
 #include <cstdio>
 #include <stdexcept>
 
-FrameBuffer::FrameBuffer() {}
+FrameBuffer::FrameBuffer() {
+    glGenFramebuffers(1, &m_fbo);
+    glGenRenderbuffers(1, &m_rbo);
+}
 
 void FrameBuffer::create(
     const int width, 
@@ -12,7 +15,7 @@ void FrameBuffer::create(
 
     this->invalidate();
 
-    glGenFramebuffers(1, &m_fbo);
+    // glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
     /* Generate texture */
@@ -40,7 +43,7 @@ void FrameBuffer::create(
     );  
 
     /* Create render buffer object */
-    glGenRenderbuffers(1, &m_rbo);
+    // glGenRenderbuffers(1, &m_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, m_rbo); 
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);  
 
@@ -79,10 +82,17 @@ void FrameBuffer::invalidate() {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0); 
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        glDeleteFramebuffers(1, &m_fbo);
-        glDeleteRenderbuffers(1, &m_rbo);
 
-        // m_texture.invalidate(); // Also handled by texture load(). So, the texture still exists but will be reloaded once create() is called. 
+        /* Deleting is not really needed, we only need to update the attachments */
+        // glDeleteFramebuffers(1, &m_fbo);
+        // glDeleteRenderbuffers(1, &m_rbo);
+
+        /** 
+         * Also handled by texture load(). 
+         * So, the texture still exists here, but will be reloaded once 
+         * Texture::load() / create() is called. 
+         */
+        // m_texture.invalidate(); 
     }
 }
 

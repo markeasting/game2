@@ -18,7 +18,7 @@ public:
     FrameBuffer();
 
     /**
-     * @brief Creates the framebuffer. 
+     * @brief Invalidates the current framebuffer and creates a new framebuffer. 
      * @param width Width of the framebuffer.
      * @param height Height of the framebuffer.
      */
@@ -32,6 +32,10 @@ public:
      */
     void invalidate();
 
+    /** 
+     * @brief Binds the framebuffer for rendering.
+     * @see glBindFramebuffer()
+     */
     void bind() const;
 
     /** @return fbo handle (Frame Buffer Object) */

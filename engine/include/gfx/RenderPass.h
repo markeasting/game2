@@ -72,6 +72,18 @@ public:
         glBindTexture(GL_TEXTURE_2D, readBuffer.getTexture().getId());
     }
 
+    /**
+	 * @brief Updates the size of the render pass framebuffer
+	 */
+	void setSize(
+		GLint x,
+		GLint y,
+		GLsizei width,
+		GLsizei height
+	) {
+        m_frameBuffer.create(width, height);
+    };
+
 protected:
     // std::function<void()> m_setupFunc;
 };

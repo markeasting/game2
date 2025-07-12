@@ -74,7 +74,7 @@ void Renderer::setSize(
     glViewport(x, y, width, height);
 
     for (auto& renderPass : m_renderPasses) {
-        renderPass.m_frameBuffer.create(width, height);
+        renderPass.setSize(x, y, width, height);
     }
 }
 
@@ -86,7 +86,7 @@ void Renderer::setSize(
     glViewport(0, 0, width, height);
 
     for (auto& renderPass : m_renderPasses) {
-        renderPass.m_frameBuffer.create(width, height);
+        renderPass.setSize(0, 0, width, height);
     }
 }
 
