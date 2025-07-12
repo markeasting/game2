@@ -3,14 +3,13 @@ out vec4 FragColor;
 
 in vec2 uv;
 
-uniform sampler2D framebuffer;
+uniform sampler2D u_readBuffer;
+uniform float u_smearAlpha = 0.05;
 
 void main() {
 
-	vec4 color = texture(framebuffer, uv);
+	vec4 color = texture(u_readBuffer, uv);
 
-	float smearAlpha = 0.05;
-
-	FragColor = vec4(color.rgb, smearAlpha);
+	FragColor = vec4(color.rgb, u_smearAlpha);
 
 }
