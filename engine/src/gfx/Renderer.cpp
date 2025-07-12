@@ -51,10 +51,12 @@ Renderer::Renderer(RendererConfig config):
     );
 
     m_renderPasses = {
-        // RenderPass(ref<Shader>("Basic.vert", "renderpass/smear.frag"), {
-        //     .autoClear = false
-        // }),
-        RenderPass(ref<Shader>("Basic.vert", "renderpass/final.frag"), {
+        RenderPass(Material(ref<Shader>("Basic.vert", "renderpass/smear.frag"), {
+            { "u_smearAlpha", ref<Uniform<float>>(0.1f) }
+        }), {
+            .autoClear = false
+        }),
+        RenderPass(Material(ref<Shader>("Basic.vert", "renderpass/final.frag")), {
             // .autoClear = false
         }),
     };

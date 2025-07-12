@@ -6,6 +6,7 @@
 /**
  * Frame Buffer Object (fbo) for off-screen rendering.
  * https://learnopengl.com/Advanced-OpenGL/Framebuffers 
+ * @todo add ability to change attachments, e.g. depth buffer, stencil buffer, etc.
  */
 class FrameBuffer {
 public:
@@ -36,7 +37,7 @@ public:
     /** @return fbo handle (Frame Buffer Object) */
     GLuint getId() const { return m_fbo; }
 
-    GLuint getTexture() const { return m_texture.getId(); }
+    Texture getTexture() const { return m_texture; }
 
     int getWidth() const { return m_texture.getWidth(); }
     int getHeight() const { return m_texture.getHeight(); }

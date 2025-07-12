@@ -64,12 +64,21 @@ public:
 
 protected:
 
+    /** OpenGL texture ID */
     GLuint m_texture = 0;
+
+    /** Width of the texture */
     GLsizei m_width = 0;
+
+    /** Height of the texture */
     GLsizei m_height = 0;
     
+    /** Format of the texture (e.g., GL_RGB, GL_RGBA) */
     GLenum m_format = GL_RGB;
 
+    /** 
+     * Default texture path, used when a texture cannot be loaded.
+     */
     static constexpr const char* m_defaultTexture = "assets/texture/default.jpg";
 
 };
