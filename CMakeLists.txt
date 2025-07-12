@@ -58,9 +58,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 #     target_link_libraries(${PROJECT_NAME} PRIVATE "-framework OpenGL")
 # endif()
 
-# Copy the 'assets' directory to the build output directory
-add_custom_command(
-    TARGET ${PROJECT_NAME} POST_BUILD
+# Create a custom target to copy the assets directory
+add_custom_target(copy_assets ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${CMAKE_SOURCE_DIR}/game/assets
             $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
