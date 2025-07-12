@@ -58,10 +58,23 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 #     target_link_libraries(${PROJECT_NAME} PRIVATE "-framework OpenGL")
 # endif()
 
-# Create a custom target to copy the assets directory
-add_custom_target(copy_assets ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
+
+# --------------------------- ASSETS AND RESOURCES --------------------------- #
+# Symlink the assets to the build dir - useful for development, 
+# but in release mode we should copy the assets instead.
+
+# Custom target - copy the assets directory
+# add_custom_target(copy_assets ALL
+#     COMMAND ${CMAKE_COMMAND} -E copy_directory
+#             ${CMAKE_SOURCE_DIR}/game/assets
+#             $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
+#     COMMENT "Copying assets directory to build output"
+# )
+
+# Custom target - create a symlink for the assets directory
+add_custom_target(link_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
             ${CMAKE_SOURCE_DIR}/game/assets
             $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
-    COMMENT "Copying assets directory to build output"
+    COMMENT "Creating symlink for assets directory in build output"
 )
