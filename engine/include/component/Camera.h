@@ -21,7 +21,9 @@ public:
     mat4 m_projectionMatrix = mat4(1.0f);
     mat4 m_viewProjectionMatrix = mat4(1.0f);
 
-    FrameBuffer m_frameBuffer;
+    FrameBuffer m_frameBuffer = FrameBuffer({
+        .attachRenderBufferObject = true // Attach a render buffer object for depth and stencil
+    });
 
     Camera();
     Camera(CameraSettings settings);

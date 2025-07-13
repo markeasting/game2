@@ -23,7 +23,7 @@ void Camera::setSize(
     );
     
     // @todo only invalidate/update if size has changed
-    m_frameBuffer.create(frameBufferWidth, frameBufferHeight);
+    m_frameBuffer.setSize(frameBufferWidth, frameBufferHeight);
 
 }
 

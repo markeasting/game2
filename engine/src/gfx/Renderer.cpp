@@ -1,6 +1,7 @@
 
 #include "gfx/Renderer.h"
 #include "common/gl.h"
+// #include "gfx/fxpass/BloomPass.h"
 #include "gfx/Material.h"
 
 #include "gameobject/GameObject.h"
@@ -58,6 +59,7 @@ Renderer::Renderer(RendererConfig config):
         }), {
             .autoClear = false
         }),
+        // BloomPass(),
         RenderPass(Material(ref<Shader>("Basic.vert", "renderpass/final.frag")), {
             // .autoClear = false
         }),

@@ -1,59 +1,110 @@
 
 #include "gfx/FrameBuffer.h"
+#include "common/gl.h"
+#include "gfx/Texture.h"
 #include <cstdio>
 #include <stdexcept>
 
-FrameBuffer::FrameBuffer() {
+FrameBuffer::FrameBuffer(FrameBufferSettings settings) 
+    : m_settings(settings) 
+{
+    /* Generate OpenGL resources */
     glGenFramebuffers(1, &m_fbo);
-    glGenRenderbuffers(1, &m_rbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+
+    if (settings.attachDefaultColorAttachment) {
+        addColorAttachment(GL_COLOR_ATTACHMENT0, false);
+    }
+
+    if (settings.attachRenderBufferObject) {
+        
+        printf("[FrameBuffer] Attaching render buffer object for depth and stencil.\n");
+        
+        /* Create the render buffer */
+        glGenRenderbuffers(1, &m_rbo);
+        glBindRenderbuffer(GL_RENDERBUFFER, m_rbo); 
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_width, m_height);
+        glFramebufferRenderbuffer(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_STENCIL_ATTACHMENT,
+            GL_RENDERBUFFER,
+            m_rbo
+        );
+        CHECK_GL_ERROR();
+    }
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
-void FrameBuffer::create(
+void FrameBuffer::addColorAttachment(
+    GLenum attachment,
+    bool bind
+) {
+
+    if (bind) 
+        glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+
+    auto texture = ref<Texture>(Texture::create(
+        m_width, 
+        m_height,
+        // m_settings.internalFormat,  // Format
+        GL_RGBA,
+        nullptr                     // Data
+    ));
+
+    texture->applySettings(TextureSettings {
+        .minFilter  = GL_LINEAR,
+        .magFilter  = GL_LINEAR,
+        .wrapS      = GL_CLAMP_TO_EDGE,
+        .wrapT      = GL_CLAMP_TO_EDGE
+    });
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, // could also be GL_DRAW_ or GL_READ_
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D,
+        texture->getId(),
+        0
+    );
+
+    CHECK_GL_ERROR();
+
+    /* @todo maybe increment, GL_COLOR_ATTACHMENT0++ */
+    m_colorAttachments[attachment] = texture;
+
+    if (bind)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void FrameBuffer::setSize(
     const int width, 
     const int height
 ) {
-
     this->invalidate();
 
-    // glGenFramebuffers(1, &m_fbo);
+    m_width = width;
+    m_height = height;
+
+    /* Bind */
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-    /* Generate texture */
-    // glGenTextures(1, &m_textureColorbuffer);
-    // glBindTexture(GL_TEXTURE_2D, m_textureColorbuffer);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    // // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    // // float borderColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-    // // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
-    // glBindTexture(GL_TEXTURE_2D, 0); // done, we can unbind the texture 
+    if (m_colorAttachments.empty()) {
+        throw std::runtime_error("No color attachments found in FrameBuffer.");
+    }
 
-    m_texture.load(width, height, GL_RGB, nullptr);
-
-    /* Attach texture to the framebuffer object */
-    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textureColorbuffer, 0);  
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D,
-        m_texture.getId(),
-        0
-    );  
-
-    /* Create render buffer object */
-    // glGenRenderbuffers(1, &m_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo); 
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);  
+    for (const auto& [attach, tex] : m_colorAttachments) {
+        tex->load(
+            width, height, GL_RGB, nullptr
+        );
+    }
 
     /* Attach the rbo to the depth and stencil attachment of the framebuffer */
-    glFramebufferRenderbuffer(
-        GL_FRAMEBUFFER,
-        GL_DEPTH_STENCIL_ATTACHMENT,
-        GL_RENDERBUFFER,
-        m_rbo
-    );
+    if (m_settings.attachRenderBufferObject) {
+        glBindRenderbuffer(GL_RENDERBUFFER, m_rbo); 
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        // CHECK_GL_ERROR();
+    }
 
     /* Check if everything is bound correctly */
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -69,16 +120,15 @@ void FrameBuffer::create(
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    printf("[FrameBuffer] Created framebuffer %d with texture %d and renderbuffer %d\n", 
+    printf("[FrameBuffer] Created framebuffer %d with renderbuffer %d\n", 
         m_fbo, 
-        m_texture.getId(), 
         m_rbo
     );
 }
 
 void FrameBuffer::invalidate() {
     if (m_fbo != 0) {
-        printf("[FrameBuffer] Invalidating framebuffer %d\n", m_fbo);
+        // printf("[FrameBuffer] Invalidating framebuffer %d\n", m_fbo);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0); 
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -86,13 +136,6 @@ void FrameBuffer::invalidate() {
         /* Deleting is not really needed, we only need to update the attachments */
         // glDeleteFramebuffers(1, &m_fbo);
         // glDeleteRenderbuffers(1, &m_rbo);
-
-        /** 
-         * Also handled by texture load(). 
-         * So, the texture still exists here, but will be reloaded once 
-         * Texture::load() / create() is called. 
-         */
-        // m_texture.invalidate(); 
     }
 }
 

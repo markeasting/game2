@@ -32,9 +32,7 @@ public:
 
     RenderPass(Material material, RenderPassConfig config = {}) 
         : m_material(material), m_config(config) 
-    {
-        m_frameBuffer = FrameBuffer();
-    }
+    {}
 
     /**
      * @todo figure out which parts remain the same and can be abstracted out, 
@@ -69,19 +67,19 @@ public:
         /* @todo Material::assignTexture() with an 'external' texture ID assigned */
         m_material.setUniform("u_readBuffer", 0); // Texture unit 0 for the read buffer - same as glBindTexture?
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, readBuffer.getTexture().getId());
+        glBindTexture(GL_TEXTURE_2D, readBuffer.getColorAttachment(GL_COLOR_ATTACHMENT0)->getId());
     }
 
     /**
 	 * @brief Updates the size of the render pass framebuffer
 	 */
-	void setSize(
+	virtual void setSize(
 		GLint x,
 		GLint y,
 		GLsizei width,
 		GLsizei height
 	) {
-        m_frameBuffer.create(width, height);
+        m_frameBuffer.setSize(width, height);
     };
 
 protected:
