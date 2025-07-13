@@ -44,7 +44,7 @@ void XPBDSolver::update(
      */
     auto collisions = XPBDSolver::collectCollisionPairs(bodies, dt);
 
-    if (dt > (1.0f / 60.0f))
+    if (dt > (2.0f / 60.0f))
     {
         return;
     }
