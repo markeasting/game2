@@ -38,3 +38,10 @@ template<> void Uniform<mat4>::bind() {
         // m_needsUpdate = false; // causes issues with materials that share shaders
     // }
 }
+
+template<> void Uniform<bool>::bind() { 
+    // if (m_needsUpdate) {
+        glUniform1i(m_location, m_value); 
+        // m_needsUpdate = false; // causes issues with materials that share shaders
+    // }
+}

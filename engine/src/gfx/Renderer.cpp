@@ -1,13 +1,14 @@
 
 #include "gfx/Renderer.h"
 #include "common/gl.h"
-// #include "gfx/fxpass/BloomPass.h"
+#include "gfx/fxpass/BloomPass.h"
 #include "gfx/Material.h"
 
 #include "gameobject/GameObject.h"
 #include "component/Transform.h"
 #include "gfx/Shader.h"
-#include <cstdio>
+#include "gfx/fxpass/FinalCompositePass.h"
+#include "gfx/fxpass/SmearPass.h"
 
 Renderer::Renderer(RendererConfig config): 
     m_config(config)
@@ -52,17 +53,9 @@ Renderer::Renderer(RendererConfig config):
     );
 
     m_renderPasses = {
-        RenderPass(Material(ref<Shader>("Basic.vert", "renderpass/smear.frag"), {
-            { "u_smearAlpha", ref<Uniform<float>>(0.1f) },
-            { "u_smearStart", ref<Uniform<float>>(0.0f) },
-            { "u_smearEnd", ref<Uniform<float>>(0.5f) },
-        }), {
-            .autoClear = false
-        }),
-        // BloomPass(),
-        RenderPass(Material(ref<Shader>("Basic.vert", "renderpass/final.frag")), {
-            // .autoClear = false
-        }),
+        ref<BloomPass>(),
+        ref<SmearPass>(),
+        ref<FinalCompositePass>(),
     };
 }
 
@@ -75,8 +68,8 @@ void Renderer::setSize(
     
     glViewport(x, y, width, height);
 
-    for (auto& renderPass : m_renderPasses) {
-        renderPass.setSize(x, y, width, height);
+    for (const auto& renderPass : m_renderPasses) {
+        renderPass->setSize(x, y, width, height);
     }
 }
 
@@ -87,8 +80,8 @@ void Renderer::setSize(
     
     glViewport(0, 0, width, height);
 
-    for (auto& renderPass : m_renderPasses) {
-        renderPass.setSize(0, 0, width, height);
+    for (const auto& renderPass : m_renderPasses) {
+        renderPass->setSize(0, 0, width, height);
     }
 }
 
@@ -141,31 +134,37 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Make sure 'wireframe' mode is disabled for the final pass
         // glDisable(GL_CULL_FACE); // not really needed for fullscreen quad
     
-        /* Draw the fullscreen quad */
+        /* Draw the fullscreen quad with each render pass */
+        // m_fullscreenQuad.bind();
+
         for (int i = 0; i < m_renderPasses.size(); i++) {
             
             auto& renderPass = m_renderPasses[i];
-
+            auto& prevPass = m_renderPasses[i - 1];
+            
             /*
-             * On the first pass, use the camera's framebuffer,
-             * otherwise use the previous renderpass framebuffer.
+             * On the first pass, use the camera's framebuffer.
+             * After that, use the previous RenderPass framebuffer.
              */
-            const auto& readBuffer = (i == 0) 
-                ? camera->m_frameBuffer 
-                : m_renderPasses[i - 1].m_frameBuffer;
-
-            renderPass.bind(readBuffer); 
-
-            // @todo maybe add the quad to the pass?
-            m_fullscreenQuad.setMaterial(renderPass.m_material);
-            m_fullscreenQuad.bind();
-
-            glDrawElements(GL_TRIANGLES, m_fullscreenQuad.m_geometry->m_indexBuffer->getCount(), GL_UNSIGNED_INT, 0);
+            if (i == 0) {
+                renderPass->bind({ camera->m_frameBuffer }); 
+            } else {
+                renderPass->bind(prevPass->m_frameBuffer);
+            }
+            
+            // m_fullscreenQuad.setMaterial(renderPass->m_material);
+            // m_fullscreenQuad.bind();
+            // glDrawElements(GL_TRIANGLES, m_fullscreenQuad.m_geometry->m_indexBuffer->getCount(), GL_UNSIGNED_INT, 0);
+            renderPass->draw(m_fullscreenQuad);
+            
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind the framebuffer after drawing
+            glActiveTexture(GL_TEXTURE0); // Reset texture unit
+            glBindTexture(GL_TEXTURE_2D, 0); // Unbind the texture after drawing
         }
 
-        /* Copy the final render pass by blitting */
+        /* Blit the final render pass to the default frame buffer */
         const auto& finalRenderPass = m_renderPasses.back();
-        const auto& finalRenderBuffer = finalRenderPass.m_frameBuffer;
+        const auto& finalRenderBuffer = finalRenderPass->m_frameBuffer;
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, finalRenderBuffer.getId());
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // default framebuffer

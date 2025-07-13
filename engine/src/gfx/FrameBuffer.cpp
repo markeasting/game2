@@ -2,6 +2,7 @@
 #include "gfx/FrameBuffer.h"
 #include "common/gl.h"
 #include "gfx/Texture.h"
+#include <cassert>
 #include <cstdio>
 #include <stdexcept>
 
@@ -13,7 +14,14 @@ FrameBuffer::FrameBuffer(FrameBufferSettings settings)
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
     if (settings.attachDefaultColorAttachment) {
-        addColorAttachment(GL_COLOR_ATTACHMENT0, false);
+        addColorAttachment(
+            GL_COLOR_ATTACHMENT0, 
+            // Note: using RGBA will give different results
+            settings.useHdr ? GL_RGB16F : GL_RGB,
+            settings.useHdr ? GL_RGB : GL_RGB,
+            GL_UNSIGNED_BYTE, 
+            false
+        );
     }
 
     if (settings.attachRenderBufferObject) {
@@ -39,41 +47,74 @@ FrameBuffer::FrameBuffer(FrameBufferSettings settings)
 
 void FrameBuffer::addColorAttachment(
     GLenum attachment,
-    bool bind
+    GLint internalformat,
+    GLint format,
+    GLenum type,
+    bool andBindUnbind
 ) {
 
-    if (bind) 
+    assert(m_colorAttachments.find(attachment) == m_colorAttachments.end() && 
+           "Color attachment already exists in FrameBuffer.");
+
+    if (andBindUnbind) 
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-    auto texture = ref<Texture>(Texture::create(
-        m_width, 
-        m_height,
-        // m_settings.internalFormat,  // Format
-        GL_RGBA,
-        nullptr                     // Data
-    ));
+    FboAttachment fboAttachment = {
+        .attachment = attachment,
+        .target = GL_TEXTURE_2D,
+        .texture = 0, // Will be set after glGenTextures
+        .level = 0,
+        .internalformat = internalformat,
+        .format = format,
+        .type = type
+    };
 
-    texture->applySettings(TextureSettings {
-        .minFilter  = GL_LINEAR,
-        .magFilter  = GL_LINEAR,
-        .wrapS      = GL_CLAMP_TO_EDGE,
-        .wrapT      = GL_CLAMP_TO_EDGE
-    });
+    glGenTextures(1, &fboAttachment.texture);
+
+    /* Bind */
+    glBindTexture(GL_TEXTURE_2D, fboAttachment.texture);
+
+    /* Filtering */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    /* Wrapping - not needed */
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    /* Anisotropic filtering - not needed */
+    // GLfloat max_anisotropy;
+    // glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &max_anisotropy);
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, std::min(max_anisotropy, 16.0f));
+
+    /* Upload data */
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        internalformat, 
+        m_width, 
+        m_height, 
+        0, 
+        format,
+        type, 
+        nullptr
+    );
 
     glFramebufferTexture2D(
         GL_FRAMEBUFFER, // could also be GL_DRAW_ or GL_READ_
-        GL_COLOR_ATTACHMENT0,
+        attachment, // GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
-        texture->getId(),
+        fboAttachment.texture,
         0
     );
 
     CHECK_GL_ERROR();
 
     /* @todo maybe increment, GL_COLOR_ATTACHMENT0++ */
-    m_colorAttachments[attachment] = texture;
+    m_colorAttachments[attachment] = fboAttachment;
+    m_drawBuffers.push_back(fboAttachment.attachment);
 
-    if (bind)
+    if (andBindUnbind)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -93,9 +134,20 @@ void FrameBuffer::setSize(
         throw std::runtime_error("No color attachments found in FrameBuffer.");
     }
 
-    for (const auto& [attach, tex] : m_colorAttachments) {
-        tex->load(
-            width, height, GL_RGB, nullptr
+    for (const auto& [unit, attachment] : m_colorAttachments) {
+        // tex->load(width, height, GL_RGBA16F, nullptr);
+
+        glBindTexture(GL_TEXTURE_2D, attachment.texture);
+        glTexImage2D(
+            GL_TEXTURE_2D, 
+            0, 
+            attachment.internalformat, 
+            width, 
+            height, 
+            0,
+            attachment.format,
+            attachment.type,
+            nullptr
         );
     }
 
@@ -141,6 +193,8 @@ void FrameBuffer::invalidate() {
 
 void FrameBuffer::bind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+
+    glDrawBuffers(m_drawBuffers.size(), m_drawBuffers.data());
 
     /* Set new viewport if you want to render to a specific part of the screen */
     // glViewport(w, h)

@@ -3,6 +3,7 @@
 #include "common/ref.h"
 #include "common/gl.h"
 #include "common/glm.h"
+#include "component/Mesh.h"
 #include "gfx/FrameBuffer.h"
 #include "gfx/Material.h"
 
@@ -30,45 +31,14 @@ public:
     /** Material applied to the full-screen quad */
     Material m_material;
 
-    RenderPass(Material material, RenderPassConfig config = {}) 
-        : m_material(material), m_config(config) 
-    {}
-
-    /**
-     * @todo figure out which parts remain the same and can be abstracted out, 
-     * e.g. same: binding the draw framebuffer, binding the material, etc.
-     */
-    virtual void bind(
-        const FrameBuffer& readBuffer
-    ) {
-        
-        /* Bind the render pass draw framebuffer */
-        // m_frameBuffer.bind();
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_frameBuffer.getId());
-        
-        /* Set up OpenGL state */
-        // m_setupFunc();
-        // glReadBuffer(readBuffer);
-        // glDrawBuffer(drawBuffer);
-
-        if (m_config.autoClear) {
-            glClearColor(
-                m_config.clearColor.r,
-                m_config.clearColor.g,
-                m_config.clearColor.b,
-                m_config.clearColor.a
-            );
-            glClear(GL_COLOR_BUFFER_BIT); // | GL_DEPTH_BUFFER_BIT // @todo add depth buffer attachment in FrameBuffer object
+    RenderPass(
+        Material material, 
+        RenderPassConfig config = {}, 
+        FrameBufferSettings frameBufferSettings = {
+            .attachDefaultColorAttachment = true,   // Attach GL_COLOR_ATTACHMENT0 automatically
+            .attachRenderBufferObject = false       // No RBO is required for render passes
         }
-
-        /* Bind the material / shader */
-        m_material.bind();
-        
-        /* @todo Material::assignTexture() with an 'external' texture ID assigned */
-        m_material.setUniform("u_readBuffer", 0); // Texture unit 0 for the read buffer - same as glBindTexture?
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, readBuffer.getColorAttachment(GL_COLOR_ATTACHMENT0)->getId());
-    }
+    );
 
     /**
 	 * @brief Updates the size of the render pass framebuffer
@@ -78,11 +48,30 @@ public:
 		GLint y,
 		GLsizei width,
 		GLsizei height
-	) {
-        m_frameBuffer.setSize(width, height);
-    };
+	);
+
+    /**
+     * @brief Binds the render pass framebuffer and sets up OpenGL state.
+     * @param readBuffer The FrameBuffer of the previous render pass. 
+     */
+    virtual void bind(
+        const FrameBuffer& readBuffer
+    );
+
+    /** 
+     * @brief Draws the full-screen quad with the render pass material.
+     * @param fullscreenQuad The full-screen quad to draw.
+     * @note This method could be overridden in derived classes to implement specific rendering logic.
+     */
+    virtual void draw(Mesh& fullscreenQuad);
+    
 
 protected:
     // std::function<void()> m_setupFunc;
+    
+    void _drawQuad(
+        Mesh& fullscreenQuad,
+        Material& material
+    );
 };
 

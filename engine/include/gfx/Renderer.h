@@ -67,7 +67,7 @@ private:
 	
 	// Material m_renderPassMaterial;
 
-	std::vector<RenderPass> m_renderPasses = {};
+	std::vector<Ref<RenderPass>> m_renderPasses = {};
 
 };
 

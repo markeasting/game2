@@ -22,6 +22,8 @@ public:
     mat4 m_viewProjectionMatrix = mat4(1.0f);
 
     FrameBuffer m_frameBuffer = FrameBuffer({
+        .useHdr = true, // Use HDR buffers by default
+        .attachDefaultColorAttachment = true, // Attach GL_COLOR_ATTACHMENT0 automatically
         .attachRenderBufferObject = true // Attach a render buffer object for depth and stencil
     });
 
