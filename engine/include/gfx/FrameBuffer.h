@@ -76,6 +76,8 @@ public:
         return getColorAttachment(GL_COLOR_ATTACHMENT0).texture;
     }
 
+    GLuint depthTexture;
+
     /**
      * @brief Get a color attachment by its attachment point.
      * @param attachment Attachment point, e.g. GL_COLOR_ATTACHMENT0.
@@ -126,5 +128,5 @@ private:
     /**
      * @brief (internal) List of color attachments for glDrawBuffers().
      */
-    std::vector<GLenum> m_drawBuffers; 
+    std::vector<GLenum> m_attachedTargets; 
 };

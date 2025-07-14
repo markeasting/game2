@@ -160,6 +160,10 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
             glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind the framebuffer after drawing
             glActiveTexture(GL_TEXTURE0); // Reset texture unit
             glBindTexture(GL_TEXTURE_2D, 0); // Unbind the texture after drawing
+
+            /* Not needed since this is stored by OpenGL per FBO */
+            // GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+            // glDrawBuffers(1, drawBuffers); // Disable draw buffers after the last pass
         }
 
         /* Blit the final render pass to the default frame buffer */

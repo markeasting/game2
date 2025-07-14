@@ -149,7 +149,9 @@ void FrameBuffer::addColorAttachment(
 
     /* @todo maybe increment automatically, ie. GL_COLOR_ATTACHMENT0++ */
     m_colorAttachments[attachment] = fboAttachment;
-    m_drawBuffers.push_back(fboAttachment.attachment);
+    m_attachedTargets.push_back(fboAttachment.attachment);
+
+    glDrawBuffers(m_attachedTargets.size(), m_attachedTargets.data());
 
     if (andBindUnbind)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -215,7 +217,8 @@ void FrameBuffer::setSize(
 void FrameBuffer::bind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-    glDrawBuffers(m_drawBuffers.size(), m_drawBuffers.data());
+    /* Set glDrawBuffers() to render to all attached render targets */
+    // glDrawBuffers(m_attachedTargets.size(), m_attachedTargets.data());
 
     /* Set new viewport if you want to render to a specific part of the screen */
     // glViewport(w, h)
