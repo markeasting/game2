@@ -19,9 +19,11 @@ public:
     Mesh(const Geometry& geometry, const Material& material);
     Mesh(Ref<Geometry> geometry, const Material& material);
 
-    virtual ~Mesh() = default;
+    virtual ~Mesh() {
+        // std::cout << "[Mesh] Destroying mesh" << std::endl;
+    };
 
-    void setMaterial(const Material& material);
+    void setMaterial(Material& material);
     void setMaterial(Ref<Material> material);
     
     virtual void bind() const;

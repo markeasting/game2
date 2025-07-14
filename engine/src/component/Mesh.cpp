@@ -36,8 +36,8 @@ void Mesh::unbind() const {
     m_geometry->unbind();
 }
 
-void Mesh::setMaterial(const Material& material) {
-    setMaterial(ref<Material>(material));
+void Mesh::setMaterial(Material& material) {
+    m_material = ref<Material>(std::move(material));
 }
 
 void Mesh::setMaterial(Ref<Material> material) {
