@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 
+#include "Car.h"
 #include "common/ref.h"
 #include "core/Window.h"
 #include "util/VectorMath.h"
@@ -98,7 +99,7 @@ int main() {
         });
         
         auto colorMaterial2 = Material(colorShader, {
-            { "u_color", uniform(vec4(1.0f, 0.0f, 0.8f, 1.0f)) },
+            { "u_color", uniform(vec4(10.0f, 5.0f, 0.8f, 1.0f)) },
         });
 
         auto textureMaterial = Material(ref<Shader>("Basic.vert", "BasicTextured.frag"));
@@ -162,12 +163,14 @@ int main() {
             body->setPosition({ 0.0f, size + i * size * 1.001f, 0.0f });
             body->setBox(vec3(size, size, size), 150.0f);
 
-            if (i == 0)
+            if (i == 0) {
+                box->getComponent<Mesh>()->setMaterial(colorMaterial2);
                 player = body;
+            }
         }
 
         auto floor = ref<GameObject>("Floor", std::vector<Ref<Component>>{
-            ref<Mesh>(PlaneGeometry(300.0f, 300.0f), colorMaterial2),
+            ref<Mesh>(PlaneGeometry(300.0f, 300.0f), textureMaterial),
             ref<RigidBody>()
         });
         auto floorBody = floor->getComponent<RigidBody>();
@@ -177,6 +180,17 @@ int main() {
         floorBody->makeStatic();
 
         gameObjects.push_back(floor);
+
+        /* Car */
+        auto car = Car(phys);
+        auto carBody = car.m_body->getComponent<RigidBody>();
+        // phys.add(car.m_body->getComponent<RigidBody>());
+
+        gameObjects.push_back(car.m_body);
+        gameObjects.push_back(car.m_bodyShadow);
+        for (auto& wheel : car.m_wheels) {
+            gameObjects.push_back(wheel);
+        }
         
         /* get all mesh components from all game objects */
         std::vector<Ref<Mesh>> meshes;
@@ -214,9 +228,9 @@ int main() {
                 } else if (e.type == SDL_MOUSEBUTTONDOWN) {
                     std::cout << "Mouse button pressed: " << e.button.button << std::endl;
 
-                    // if (e.button.button == SDL_BUTTON_LEFT) {
-                    //     camController->m_autoRotate = !camController->m_autoRotate;
-                    // }
+                    if (e.button.button == SDL_BUTTON_LEFT) {
+                        camController->m_autoRotate = !camController->m_autoRotate;
+                    }
                 
                 } else if (e.type == SDL_WINDOWEVENT) {
                     if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
@@ -241,15 +255,15 @@ int main() {
             const Uint8* state = SDL_GetKeyboardState(NULL);
 
             if (state[SDL_SCANCODE_SPACE])
-                player->applyForce(vec3(0.0f, 250.0f, 0.0f), player->pose.p);
+                carBody->applyForce(vec3(0.0f, 10000.0f, 0.0f), carBody->pose.p);
             if (state[SDL_SCANCODE_J])
-                player->applyForce(vec3(-250.0f, 0.0f, 0.0f), player->pose.p);
+                carBody->applyForce(vec3(-250.0f, 0.0f, 0.0f), carBody->pose.p);
             if (state[SDL_SCANCODE_L])
-                player->applyForce(vec3(250.0f, 0.0f, 0.0f), player->pose.p);
+                carBody->applyForce(vec3(250.0f, 0.0f, 0.0f), carBody->pose.p);
             if (state[SDL_SCANCODE_I])
-                player->applyForce(vec3(0.0f, 0.0f, -250.0f), player->pose.p);
+                carBody->applyForce(vec3(0.0f, 0.0f, -250.0f), carBody->pose.p);
             if (state[SDL_SCANCODE_K])
-                player->applyForce(vec3(0.0f, 0.0f, 250.0f), player->pose.p);
+                carBody->applyForce(vec3(0.0f, 0.0f, 250.0f), carBody->pose.p);
 
             float osc = sin(time * 1.5f) / 2.0f + 0.5f;
             colorMaterial.setUniform("u_color", vec4(0.0f, osc, 0.8f, 1.0f));
@@ -258,7 +272,9 @@ int main() {
             tetra->m_transform->setRotation(vec3(0.0f, time * 50.0f, 0.0f));
 
             /* Core update */
-            phys.update(dt, [&](float dt) {});
+            phys.update(dt, [&](float h) {
+                car.update(h, phys);
+            });
 
             for (auto& obj : gameObjects) {
                 obj->update(time, dt);
