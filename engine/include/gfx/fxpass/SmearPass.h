@@ -14,9 +14,9 @@ public:
         : RenderPass(
             Material(
                 ref<Shader>("Basic.vert", "renderpass/Smear.frag"), {
-                    { "u_smearAlpha", ref<Uniform<float>>(0.1f) },
-                    { "u_smearStart", ref<Uniform<float>>(0.0f) },
-                    { "u_smearEnd", ref<Uniform<float>>(0.5f) },
+                    { "u_smearAlpha", ref<Uniform<float>>(0.3f) },
+                    { "u_smearStart", ref<Uniform<float>>(0.2f) },
+                    { "u_smearEnd", ref<Uniform<float>>(0.6f) },
                 }
             ),
             RenderPassConfig {
