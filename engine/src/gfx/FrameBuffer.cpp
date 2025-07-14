@@ -1,7 +1,6 @@
 
 #include "gfx/FrameBuffer.h"
 #include "common/gl.h"
-#include "gfx/Texture.h"
 #include <cassert>
 #include <cstdio>
 #include <stdexcept>
@@ -43,6 +42,43 @@ FrameBuffer::FrameBuffer(FrameBufferSettings settings)
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+
+FrameBuffer::~FrameBuffer() {
+    /* Just destroy the OpenGL context and let it bleed out */
+    // if (m_fbo) {
+    //     glDeleteFramebuffers(1, &m_fbo);
+    // }
+    // if (m_rbo) {
+    //     glDeleteRenderbuffers(1, &m_rbo);
+    // }
+    
+    // for (const auto& [attachment, fboAttachment] : m_colorAttachments) {
+    //     glDeleteTextures(1, &fboAttachment.texture);
+    // }
+}
+
+const FboAttachment& FrameBuffer::getColorAttachment(GLenum attachment) const {
+
+    // printf("[FrameBuffer] Getting color attachment %d\n", attachment);
+
+    // Slow
+    // GLint maxColorAttachments;
+    // glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    
+    // GLenum attach = GL_COLOR_ATTACHMENT0 + attachment;
+
+    if (attachment > GL_COLOR_ATTACHMENT15) {
+        printf("[FrameBuffer] Error: Attachment %d is out of range (max is 15)\n", attachment);
+        throw std::out_of_range("[FrameBuffer] ERR");
+    }
+
+    if (m_colorAttachments.count(attachment)) {
+        return m_colorAttachments.at(attachment);
+    }
+    
+    throw std::out_of_range("[FrameBuffer] Attachment not found");
+    // return m_colorAttachments.at(attachment);
 }
 
 void FrameBuffer::addColorAttachment(
@@ -100,9 +136,10 @@ void FrameBuffer::addColorAttachment(
         nullptr
     );
 
+    /* Attach the texture to the framebuffer */
     glFramebufferTexture2D(
         GL_FRAMEBUFFER, // could also be GL_DRAW_ or GL_READ_
-        attachment, // GL_COLOR_ATTACHMENT0,
+        attachment,     // GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
         fboAttachment.texture,
         0
@@ -110,7 +147,7 @@ void FrameBuffer::addColorAttachment(
 
     CHECK_GL_ERROR();
 
-    /* @todo maybe increment, GL_COLOR_ATTACHMENT0++ */
+    /* @todo maybe increment automatically, ie. GL_COLOR_ATTACHMENT0++ */
     m_colorAttachments[attachment] = fboAttachment;
     m_drawBuffers.push_back(fboAttachment.attachment);
 
@@ -122,8 +159,6 @@ void FrameBuffer::setSize(
     const int width, 
     const int height
 ) {
-    this->invalidate();
-
     m_width = width;
     m_height = height;
 
@@ -134,16 +169,15 @@ void FrameBuffer::setSize(
         throw std::runtime_error("No color attachments found in FrameBuffer.");
     }
 
+    /* Update all attachments */
     for (const auto& [unit, attachment] : m_colorAttachments) {
-        // tex->load(width, height, GL_RGBA16F, nullptr);
-
         glBindTexture(GL_TEXTURE_2D, attachment.texture);
         glTexImage2D(
-            GL_TEXTURE_2D, 
-            0, 
+            attachment.target,
+            attachment.level, 
             attachment.internalformat, 
             width, 
-            height, 
+            height,
             0,
             attachment.format,
             attachment.type,
@@ -176,19 +210,6 @@ void FrameBuffer::setSize(
         m_fbo, 
         m_rbo
     );
-}
-
-void FrameBuffer::invalidate() {
-    if (m_fbo != 0) {
-        // printf("[FrameBuffer] Invalidating framebuffer %d\n", m_fbo);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0); 
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-        /* Deleting is not really needed, we only need to update the attachments */
-        // glDeleteFramebuffers(1, &m_fbo);
-        // glDeleteRenderbuffers(1, &m_rbo);
-    }
 }
 
 void FrameBuffer::bind() const {

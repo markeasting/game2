@@ -9,7 +9,6 @@
 
 /** 
  * Render pass configuration.
- * 
  * @todo allow glEnable calls in a config, maybe add a 'callback'
  */
 struct RenderPassConfig {
@@ -69,6 +68,11 @@ public:
 protected:
     // std::function<void()> m_setupFunc;
     
+    /**
+     * @brief (Internal) Draws a full-screen quad with the given material.
+     * @param fullscreenQuad The full-screen quad to draw.
+     * @param material The material to use for rendering.
+     */
     void _drawQuad(
         Mesh& fullscreenQuad,
         Material& material

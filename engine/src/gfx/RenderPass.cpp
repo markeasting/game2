@@ -11,9 +11,6 @@ RenderPass::RenderPass(
     })
 {}
 
-/**
-    * @brief Updates the size of the render pass framebuffer
-    */
 void RenderPass::setSize(
     GLint x,
     GLint y,
@@ -43,14 +40,6 @@ void RenderPass::bind(
 
     /* Bind the material / shader */
     m_material.bind();
-
-    /* Bind each read buffer to a texture unit */
-    // for (size_t i = 0; i < readBuffers.size(); ++i) {
-    //     const FrameBuffer& readBuffer = readBuffers[i];
-    //     // m_material.setUniform("u_readBuffer" + std::to_string(i), i); // Texture unit i
-    //     glActiveTexture(GL_TEXTURE0 + i);
-    //     glBindTexture(GL_TEXTURE_2D, readBuffer.getTexture());
-    // }
 
     m_material.setUniform("u_readBuffer", 0);
     glActiveTexture(GL_TEXTURE0);

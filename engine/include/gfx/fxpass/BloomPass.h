@@ -12,7 +12,7 @@
  * - GL_COLOR_ATTACHMENT0: FragColor:   The original scene color.
  * - GL_COLOR_ATTACHMENT1: BrightColor: Brightest areas
  * 
- * It then blurs the BrightColor buffer and composites them, 
+ * Then it blurs the BrightColor buffer and composites them, 
  * using a ping-pong buffer technique.
  */
 class BloomPass : public RenderPass {
@@ -64,19 +64,13 @@ public:
             GL_FLOAT
         );
 
-        /* Blur ping/pong buffer */
+        /* Blur ping/pong buffers */
         m_pingpong1.addColorAttachment(
-            GL_COLOR_ATTACHMENT0,
-            GL_RGBA16F,
-            GL_RGBA,
-            GL_FLOAT
+            GL_COLOR_ATTACHMENT0
         );
 
         m_pingpong2.addColorAttachment(
-            GL_COLOR_ATTACHMENT0,
-            GL_RGBA16F,
-            GL_RGBA,
-            GL_FLOAT
+            GL_COLOR_ATTACHMENT0
         );
     }
 
