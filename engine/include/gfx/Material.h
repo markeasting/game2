@@ -24,7 +24,9 @@ public:
         std::unordered_map<std::string, Ref<IUniform>> uniforms = {}
     );
 
-    ~Material() = default;
+    ~Material() {
+        // std::cout << "[Material] Destroying material" << std::endl;
+    };
 
     template <typename T>
     void setUniform(const std::string& name, T value) {
@@ -76,7 +78,7 @@ public:
      * glActiveTexture()
      * glBindTexture()
      */
-    void bind() const;
+    void bind(bool bindTextures = true) const;
 
 private:
 };

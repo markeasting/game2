@@ -1,12 +1,11 @@
 
 #include "gfx/Renderer.h"
 #include "common/gl.h"
-#include "gfx/fxpass/BloomPass.h"
-#include "gfx/Material.h"
 
 #include "gameobject/GameObject.h"
 #include "component/Transform.h"
-#include "gfx/Shader.h"
+
+#include "gfx/fxpass/BloomPass.h"
 #include "gfx/fxpass/FinalCompositePass.h"
 #include "gfx/fxpass/SmearPass.h"
 
@@ -41,7 +40,7 @@ Renderer::Renderer(RendererConfig config):
 	// glStencilFunc(GL_EQUAL, 1, 0xFF);
     // glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // Default behavior
 
-    /* Quad for the render pass */
+    /* Quad for render passes */
     m_fullscreenQuad.m_geometry = ref<Geometry>(
         std::vector<Vertex>{
             { vec3(  1, -1, 0 ), vec3( 0, 0, 1 ), vec2( 1, 0 ) },
@@ -51,11 +50,14 @@ Renderer::Renderer(RendererConfig config):
         },
         std::vector<unsigned int>{ 0, 1, 2, 2, 1, 3 }
     );
+    
+    /* Check errors */
+    CHECK_GL_ERROR_THROW();
 
     m_renderPasses = {
         ref<BloomPass>(),
         ref<SmearPass>(),
-        ref<FinalCompositePass>(),
+        // ref<FinalCompositePass>(),
     };
 }
 
@@ -91,10 +93,9 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
 
     if (m_config.useRenderpass) {
         camera->m_frameBuffer.bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-    } else {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     
     /* Draw opaque meshes */
     for (auto const& mesh : meshes) {
@@ -124,23 +125,18 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
 
     if (m_config.useRenderpass) {
 
-        /* Bind the default framebuffer */
-        /* @todo why not use FrameBuffer class? */
-        glBindFramebuffer(GL_FRAMEBUFFER, 0); // Bind the default framebuffer
-        // glClear(GL_COLOR_BUFFER_BIT); // Clear the color buffer for the final pass
-    
         /* Setup state */
         glDisable(GL_DEPTH_TEST); // Disable depth test for the final pass
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Make sure 'wireframe' mode is disabled for the final pass
-        // glDisable(GL_CULL_FACE); // not really needed for fullscreen quad
+        glDisable(GL_CULL_FACE); // Not needed for fullscreen quad
     
         /* Draw the fullscreen quad with each render pass */
-        // m_fullscreenQuad.bind();
+        m_fullscreenQuad.m_geometry->bind();
 
         for (int i = 0; i < m_renderPasses.size(); i++) {
             
-            auto& renderPass = m_renderPasses[i];
-            auto& prevPass = m_renderPasses[i - 1];
+            const auto& renderPass = m_renderPasses[i];
+            const auto& prevPass = m_renderPasses[i - 1];
             
             /*
              * On the first pass, use the camera's framebuffer.
@@ -152,18 +148,9 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
                 renderPass->bind(prevPass->m_frameBuffer);
             }
             
-            // m_fullscreenQuad.setMaterial(renderPass->m_material);
-            // m_fullscreenQuad.bind();
-            // glDrawElements(GL_TRIANGLES, m_fullscreenQuad.m_geometry->m_indexBuffer->getCount(), GL_UNSIGNED_INT, 0);
             renderPass->draw(m_fullscreenQuad);
-            
-            glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind the framebuffer after drawing
-            glActiveTexture(GL_TEXTURE0); // Reset texture unit
-            glBindTexture(GL_TEXTURE_2D, 0); // Unbind the texture after drawing
 
-            /* Not needed since this is stored by OpenGL per FBO */
-            // GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-            // glDrawBuffers(1, drawBuffers); // Disable draw buffers after the last pass
+            CHECK_GL_ERROR_THROW();
         }
 
         /* Blit the final render pass to the default frame buffer */
@@ -171,7 +158,11 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
         const auto& finalRenderBuffer = finalRenderPass->m_frameBuffer;
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, finalRenderBuffer.getId());
+        glReadBuffer(GL_COLOR_ATTACHMENT0); // Read from the first color attachment
+        
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // default framebuffer
+        glDrawBuffer(GL_BACK); // Write to BACK buffer - will cause GL_INVALID_OPERATION otherwise
+
         glBlitFramebuffer(
             0, 0, finalRenderBuffer.getWidth(), finalRenderBuffer.getHeight(), // src rect
             0, 0, finalRenderBuffer.getWidth(), finalRenderBuffer.getHeight(), // dst rect
@@ -179,75 +170,14 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
             GL_NEAREST                 // Filtering 
         );
 
+        CHECK_GL_ERROR_THROW();
+
         /* Reset state */
         glEnable(GL_DEPTH_TEST); 
-        // glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
     }
 
 }
-
-// void Renderer::draw(Ref<Scene> scene, Ref<Camera> camera) {
-
-//     assert(scene != nullptr);
-//     assert(camera != nullptr);
-
-//     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-//     if (m_config.useRenderpass) {
-//         camera->m_frameBuffer.bind();
-//         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-//         glEnable(GL_DEPTH_TEST);
-//     }
-    
-//     for (auto const& [name, layer] : scene->m_layers.all()) {
-        
-//         if (!layer->m_active)
-//             continue;
-
-//         /* Draw opaque meshes */
-//         for (auto const& mesh : layer->m_meshes) {
-
-//             if (mesh->m_material->transparent)
-//                 continue;
-
-//             this->drawMesh(mesh, camera);
-
-//             // @TODO check if unbinding VAO / shader / texture is required
-//             // Or if it has any impact on performance
-//             // mesh->unbind(); 
-//         }
-
-//         /* Draw transparent meshes */
-//         for (auto const& mesh : layer->m_meshes) {
-
-//             if (!mesh->m_material->transparent)
-//                 continue;
-
-//             this->drawMesh(mesh, camera);
-
-//             // @TODO check if unbinding VAO / shader / texture is required
-//             // Or if it has any impact on performance
-//             // mesh->unbind(); 
-//         }
-//     }
-
-//     if (m_config.useRenderpass) {
-    
-//         /* Final render pass */
-//         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//         glClear(GL_COLOR_BUFFER_BIT);
-//         glDisable(GL_DEPTH_TEST);
-//         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-//         glEnable(GL_CULL_FACE);
-
-//         m_fullscreenQuad.bind();
-//         glActiveTexture(GL_TEXTURE0);
-//         glBindTexture(GL_TEXTURE_2D, camera->m_frameBuffer.getTexture());
-
-//         glDrawElements(GL_TRIANGLES, m_fullscreenQuad.m_geometry->m_indexBuffer->getCount(), GL_UNSIGNED_INT, 0);
-//     }
-
-// }
 
 void Renderer::drawMesh(Ref<Mesh> mesh, Ref<Camera> camera) {
 
@@ -258,6 +188,7 @@ void Renderer::drawMesh(Ref<Mesh> mesh, Ref<Camera> camera) {
 
     auto transform = mesh->gameObject->tryGetComponent<Transform>();
 
+    /* If there's no transform component, we skip all projections */
     if (transform) {
 
         auto matrix = transform->getWorldPositionMatrix();
@@ -288,6 +219,9 @@ void Renderer::drawMesh(Ref<Mesh> mesh, Ref<Camera> camera) {
                 ? camera->m_viewProjectionMatrix * matrix
                 : matrix
         );
+
+        /* Clear any errors from undefined uniform locations */
+        CHECK_GL_ERROR();
     }
 
     if (m_config.wireframe || mesh->m_material && mesh->m_material->wireframe) {

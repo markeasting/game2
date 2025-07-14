@@ -5,8 +5,25 @@
 
 #include <SDL2/SDL.h>
 
-Camera::Camera() {}
-Camera::Camera(CameraSettings settings) : m_settings(settings) {}
+Camera::Camera(CameraSettings settings) : m_settings(settings) {
+
+    /* Color attachment (HDR) */
+    /* FrameBufferSettings dictate whether it's an HDR buffer. */
+    m_frameBuffer.addAttachment(
+        GL_COLOR_ATTACHMENT0
+        // GL_RGB16F,
+        // GL_RGB,
+        // GL_FLOAT
+    );
+
+    /* Depth buffer attachment (instead of an RBO to allow reading the texture data) */
+    m_frameBuffer.addAttachment(
+        GL_DEPTH_ATTACHMENT,
+        GL_DEPTH_COMPONENT24,
+        GL_DEPTH_COMPONENT,
+        GL_FLOAT
+    );
+}
 
 Camera::~Camera() {}
 
@@ -22,9 +39,7 @@ void Camera::setSize(
         m_settings.farPlane
     );
     
-    // @todo only invalidate/update if size has changed
     m_frameBuffer.setSize(frameBufferWidth, frameBufferHeight);
-
 }
 
 void Camera::bind() const {

@@ -1,12 +1,13 @@
 
 #include "gfx/RenderPass.h"
+#include "common/gl.h"
 
 RenderPass::RenderPass(
     Material material, 
     RenderPassConfig config, 
     FrameBufferSettings frameBufferSettings
 ) 
-    : m_material(material), m_config(config), m_frameBuffer({
+    : m_material(ref<Material>(material)), m_config(config), m_frameBuffer({
         FrameBuffer(frameBufferSettings)
     })
 {}
@@ -35,15 +36,21 @@ void RenderPass::bind(
             m_config.clearColor.b,
             m_config.clearColor.a
         );
-        glClear(GL_COLOR_BUFFER_BIT); // | GL_DEPTH_BUFFER_BIT
+        /* Note: if there are no color attachments, this could throw GL_INVALID_OPERATION */
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    /* Bind the material / shader */
-    m_material.bind();
+    CHECK_GL_ERROR();
 
-    m_material.setUniform("u_readBuffer", 0);
+    /* Bind the material / shader without textures */
+    m_material->bind(false);
+
+    /* Manually bind textures */
+    m_material->setUniform("u_readBuffer", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, readBuffer.getTexture());
+
+    CHECK_GL_ERROR();
 }
 
 void RenderPass::draw(
@@ -54,10 +61,16 @@ void RenderPass::draw(
 
 void RenderPass::_drawQuad(
     Mesh& fullscreenQuad,
-    Material& material
+    Ref<Material> material
 ) {
     fullscreenQuad.setMaterial(material);
-    fullscreenQuad.bind(); // @todo move bind to Renderer?
+    // fullscreenQuad.m_geometry->bind(); // Already done in Renderer
+    fullscreenQuad.m_material->bind(false);
 
-    glDrawElements(GL_TRIANGLES, fullscreenQuad.m_geometry->m_indexBuffer->getCount(), GL_UNSIGNED_INT, 0);
+    glDrawElements(
+        GL_TRIANGLES, 
+        fullscreenQuad.m_geometry->m_indexBuffer->getCount(), 
+        GL_UNSIGNED_INT, 
+        0
+    );
 }

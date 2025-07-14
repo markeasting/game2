@@ -28,7 +28,7 @@ public:
     FrameBuffer m_frameBuffer;
 
     /** Material applied to the full-screen quad */
-    Material m_material;
+    Ref<Material> m_material = nullptr;
 
     RenderPass(
         Material material, 
@@ -75,7 +75,7 @@ protected:
      */
     void _drawQuad(
         Mesh& fullscreenQuad,
-        Material& material
+        Ref<Material> material
     );
 };
 

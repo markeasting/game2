@@ -16,19 +16,18 @@ public:
 
     CameraSettings m_settings;
 
-    // @todo pass matrices with a uniform buffer object
+    // @todo pass matrices with a uniform buffer object?
     mat4 m_viewMatrix = mat4(1.0f);
     mat4 m_projectionMatrix = mat4(1.0f);
     mat4 m_viewProjectionMatrix = mat4(1.0f);
 
     FrameBuffer m_frameBuffer = FrameBuffer({
         .useHdr = true, // Use HDR buffers by default
-        .attachDefaultColorAttachment = true, // Attach GL_COLOR_ATTACHMENT0 automatically
-        .attachRenderBufferObject = true // Attach a render buffer object for depth and stencil
+        .attachDefaultColorAttachment = false,  // Attach GL_COLOR_ATTACHMENT0 automatically
+        .attachRenderBufferObject = false       // Skip the RBO, add explicit depth attachment (readable in shader)
     });
 
-    Camera();
-    Camera(CameraSettings settings);
+    Camera(CameraSettings settings = {});
     ~Camera();
 
     void setSize(

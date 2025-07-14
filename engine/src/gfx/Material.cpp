@@ -1,5 +1,6 @@
 
 #include "gfx/Material.h"
+#include "common/gl.h"
 #include "gfx/Shader.h"
 
 #include <string>
@@ -65,13 +66,15 @@ void Material::assignTexture(
     this->assignTexture(texture, uniform);
 }
 
-void Material::bind() const {
+void Material::bind(bool bindTextures) const {
 
     m_shader->bind(); // glUseProgram()
 
-    for (int i = 0; i < textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + i); // @todo move to bind()?
-        textures[i]->bind();
+    if (bindTextures) {
+        for (int i = 0; i < textures.size(); i++) {
+            glActiveTexture(GL_TEXTURE0 + i); // @todo move to bind()?
+            textures[i]->bind();
+        }
     }
 
     for (const auto &[key, uniform] : uniforms) {

@@ -39,7 +39,7 @@ struct FboAttachment {
  */
 class FrameBuffer {
 public:
-
+    
     /**
      * @brief Default constructor.
      * @see glGenFramebuffers()
@@ -54,8 +54,8 @@ public:
      * @param height Height of the framebuffer.
      */
     virtual void setSize(
-        const int width, 
-        const int height
+        const GLsizei width, 
+        const GLsizei height
     );
 
     /** 
@@ -67,22 +67,29 @@ public:
     /** @return fbo handle (Frame Buffer Object) */
     GLuint getId() const { return m_fbo; }
 
-    int getWidth() const { return m_width; }
+    GLsizei getWidth() const { return m_width; }
 
-    int getHeight() const { return m_height; }
+    GLsizei getHeight() const { return m_height; }
 
     /** Shortcut for getting the first color attachment / texture */
     const GLint getTexture() const { 
-        return getColorAttachment(GL_COLOR_ATTACHMENT0).texture;
+        return getAttachment(GL_COLOR_ATTACHMENT0).texture;
+    }
+
+    /** Shortcut for getting the first color attachment / texture */
+    const GLint getDepthTexture() const { 
+        return getAttachment(GL_DEPTH_ATTACHMENT).texture;
     }
 
     /**
-     * @brief Get a color attachment by its attachment point.
-     * @param attachment Attachment point, e.g. GL_COLOR_ATTACHMENT0.
-     * @return Texture attached to the framebuffer at the given attachment point.
-     * @throws std::out_of_range if the attachment is out of range (greater than GL_COLOR_ATTACHMENT15).
+     * @brief Get an attachment by its attachment point.
+     * @param attachment Attachment point, e.g. GL_COLOR_ATTACHMENT0 or GL_DEPTH_ATTACHMENT.
+     * @return FboAttachment at the given attachment point.
+     * @throws std::out_of_range if the attachment is out of range (e.g. > GL_COLOR_ATTACHMENT15).
      */
-    const FboAttachment& getColorAttachment(GLenum attachment) const;
+    const FboAttachment& getAttachment(
+        GLenum attachment
+    ) const;
 
     /**
      * @brief Adds a color attachment to the framebuffer.
@@ -93,7 +100,7 @@ public:
      * @param andBindUnbind Whether to bind/unbind the framebuffer when adding the attachment.
      * @see glTexImage2D(), glFramebufferTexture2D()
      */
-    void addColorAttachment(
+    const FboAttachment& addAttachment(
         GLenum attachment,
         GLint internalformat = GL_RGBA16F,
         GLint format = GL_RGBA,
@@ -105,16 +112,15 @@ protected:
 
     FrameBufferSettings m_settings;
 
-    int m_width = 100;
+    GLsizei m_width = 600;
 
-    int m_height = 100;
+    GLsizei m_height = 600;
 
     /** 
      * @brief Color attachments of the framebuffer.
      * [<GL_COLOR_ATTACHMENTX Attachment>, <FboAttachment>]
      */
-    // std::unordered_map<GLenum, Ref<Texture>> m_colorAttachments;
-    std::unordered_map<GLenum, FboAttachment> m_colorAttachments;
+    std::unordered_map<GLenum, FboAttachment> m_attachments;
 
     /** Reference to the OpenGL FrameBuffer ID */
 	GLuint m_fbo = 0;
@@ -123,8 +129,9 @@ protected:
 	GLuint m_rbo = 0;
 
 private:
+
     /**
      * @brief (internal) List of color attachments for glDrawBuffers().
      */
-    std::vector<GLenum> m_attachedTargets; 
+    std::vector<GLenum> m_drawBufferAttachments; 
 };

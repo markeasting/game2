@@ -13,7 +13,7 @@ FrameBuffer::FrameBuffer(FrameBufferSettings settings)
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
     if (settings.attachDefaultColorAttachment) {
-        addColorAttachment(
+        addAttachment(
             GL_COLOR_ATTACHMENT0, 
             // Note: using RGBA will give different results
             settings.useHdr ? GL_RGB16F : GL_RGB,
@@ -21,6 +21,8 @@ FrameBuffer::FrameBuffer(FrameBufferSettings settings)
             GL_UNSIGNED_BYTE, 
             false
         );
+
+        CHECK_GL_ERROR_THROW();
     }
 
     if (settings.attachRenderBufferObject) {
@@ -37,28 +39,15 @@ FrameBuffer::FrameBuffer(FrameBufferSettings settings)
             GL_RENDERBUFFER,
             m_rbo
         );
-        CHECK_GL_ERROR();
+        
+        CHECK_GL_ERROR_THROW();
     }
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
-FrameBuffer::~FrameBuffer() {
-    /* Just destroy the OpenGL context and let it bleed out */
-    // if (m_fbo) {
-    //     glDeleteFramebuffers(1, &m_fbo);
-    // }
-    // if (m_rbo) {
-    //     glDeleteRenderbuffers(1, &m_rbo);
-    // }
-    
-    // for (const auto& [attachment, fboAttachment] : m_colorAttachments) {
-    //     glDeleteTextures(1, &fboAttachment.texture);
-    // }
-}
-
-const FboAttachment& FrameBuffer::getColorAttachment(GLenum attachment) const {
+const FboAttachment& FrameBuffer::getAttachment(GLenum attachment) const {
 
     // printf("[FrameBuffer] Getting color attachment %d\n", attachment);
 
@@ -68,20 +57,20 @@ const FboAttachment& FrameBuffer::getColorAttachment(GLenum attachment) const {
     
     // GLenum attach = GL_COLOR_ATTACHMENT0 + attachment;
 
-    if (attachment > GL_COLOR_ATTACHMENT15) {
-        printf("[FrameBuffer] Error: Attachment %d is out of range (max is 15)\n", attachment);
+    if (attachment < GL_COLOR_ATTACHMENT0 || attachment > GL_STENCIL_ATTACHMENT) {
+        printf("[FrameBuffer] Error: Attachment %d is out of range\n", attachment);
         throw std::out_of_range("[FrameBuffer] ERR");
     }
 
-    if (m_colorAttachments.count(attachment)) {
-        return m_colorAttachments.at(attachment);
+    if (m_attachments.count(attachment)) {
+        return m_attachments.at(attachment);
     }
     
     throw std::out_of_range("[FrameBuffer] Attachment not found");
     // return m_colorAttachments.at(attachment);
 }
 
-void FrameBuffer::addColorAttachment(
+const FboAttachment& FrameBuffer::addAttachment(
     GLenum attachment,
     GLint internalformat,
     GLint format,
@@ -89,8 +78,8 @@ void FrameBuffer::addColorAttachment(
     bool andBindUnbind
 ) {
 
-    assert(m_colorAttachments.find(attachment) == m_colorAttachments.end() && 
-           "Color attachment already exists in FrameBuffer.");
+    assert(m_attachments.find(attachment) == m_attachments.end() && 
+        "Attachment already exists in FrameBuffer.");
 
     if (andBindUnbind) 
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
@@ -114,9 +103,9 @@ void FrameBuffer::addColorAttachment(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    /* Wrapping - not needed */
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    /* Wrapping (disable) */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     /* Anisotropic filtering - not needed */
     // GLfloat max_anisotropy;
@@ -145,21 +134,29 @@ void FrameBuffer::addColorAttachment(
         0
     );
 
-    CHECK_GL_ERROR();
+    CHECK_GL_ERROR_THROW();
 
     /* @todo maybe increment automatically, ie. GL_COLOR_ATTACHMENT0++ */
-    m_colorAttachments[attachment] = fboAttachment;
-    m_attachedTargets.push_back(fboAttachment.attachment);
+    m_attachments[attachment] = fboAttachment;
 
-    glDrawBuffers(m_attachedTargets.size(), m_attachedTargets.data());
+    /* Only add 'color' attachments to glDrawBuffers() */
+    if (attachment < GL_DEPTH_ATTACHMENT) {
+        m_drawBufferAttachments.push_back(fboAttachment.attachment);
+    }
+
+    glDrawBuffers(m_drawBufferAttachments.size(), m_drawBufferAttachments.data());
 
     if (andBindUnbind)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    CHECK_GL_ERROR_THROW();
+
+    return m_attachments[attachment];
 }
 
 void FrameBuffer::setSize(
-    const int width, 
-    const int height
+    const GLsizei width, 
+    const GLsizei height
 ) {
     m_width = width;
     m_height = height;
@@ -167,12 +164,12 @@ void FrameBuffer::setSize(
     /* Bind */
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-    if (m_colorAttachments.empty()) {
+    if (m_attachments.empty()) {
         throw std::runtime_error("No color attachments found in FrameBuffer.");
     }
 
-    /* Update all attachments */
-    for (const auto& [unit, attachment] : m_colorAttachments) {
+    /* Update all FBO attachments */
+    for (const auto& [unit, attachment] : m_attachments) {
         glBindTexture(GL_TEXTURE_2D, attachment.texture);
         glTexImage2D(
             attachment.target,
@@ -191,7 +188,7 @@ void FrameBuffer::setSize(
     if (m_settings.attachRenderBufferObject) {
         glBindRenderbuffer(GL_RENDERBUFFER, m_rbo); 
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        // CHECK_GL_ERROR();
+        CHECK_GL_ERROR_THROW();
     }
 
     /* Check if everything is bound correctly */
@@ -202,24 +199,32 @@ void FrameBuffer::setSize(
         throw std::runtime_error("Framebuffer is not complete.");
     }
 
-    /* Unbind the created fbo/rbo (rebind default 0) to make sure we're not using the wrong framebuffer */
-    /* If this results in a blank screen, it could be that the default framebuffer has a diffent ID! */
-    /* In that case, get the default ID by calling glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO); */
+    /* Unbind */
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    printf("[FrameBuffer] Created framebuffer %d with renderbuffer %d\n", 
-        m_fbo, 
-        m_rbo
-    );
 }
 
 void FrameBuffer::bind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-    /* Set glDrawBuffers() to render to all attached render targets */
+    /* Render to all attached render targets */
+    /* Note: the state of glDrawBuffers is stored by the FBO */
     // glDrawBuffers(m_attachedTargets.size(), m_attachedTargets.data());
+}
 
-    /* Set new viewport if you want to render to a specific part of the screen */
-    // glViewport(w, h)
+FrameBuffer::~FrameBuffer() {
+    
+    // printf("[FrameBuffer] Destroying FrameBuffer %d\n", m_fbo);
+
+    /* Just destroy the OpenGL context and let it bleed out */
+    // if (m_fbo) {
+    //     glDeleteFramebuffers(1, &m_fbo);
+    // }
+    // if (m_rbo) {
+    //     glDeleteRenderbuffers(1, &m_rbo);
+    // }
+    
+    // for (const auto& [attachment, fboAttachment] : m_colorAttachments) {
+    //     glDeleteTextures(1, &fboAttachment.texture);
+    // }
 }
