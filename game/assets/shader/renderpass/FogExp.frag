@@ -7,6 +7,7 @@ in vec2 uv;
 uniform sampler2D u_readBuffer;
 uniform sampler2D u_depth;
 
+uniform float u_fogDensity = 0.1; // Density of the fog
 uniform vec4 u_fogColor = vec4(1.0, 1.0, 1.0, 0.5);
 uniform float u_fogStart = 5.0;
 uniform float u_fogEnd = 100.0;
@@ -26,8 +27,8 @@ void main() {
     // Depth in meters
     float depth = linearize_depth(depthRaw.r, 0.01, 500.0);
     
-    // Calculate fog factor based on depth    
-    float fogFactor = smoothstep(u_fogStart, u_fogEnd, depth);
+    // Exponential fog calculation
+    float fogFactor = 1.0 - exp(-u_fogDensity * depth);
 
     // Alpha blending with fog color
     FragColor = vec4(
