@@ -71,10 +71,13 @@ void RenderPass::_drawQuad(
     // fullscreenQuad.m_geometry->bind(); // Already done in Renderer
     fullscreenQuad.m_material->bind(false);
 
-    glDrawElements(
-        GL_TRIANGLES, 
-        fullscreenQuad.m_geometry->m_indexBuffer->getCount(), 
-        GL_UNSIGNED_INT, 
-        0
-    );
+    // glDrawElements(
+    //     GL_TRIANGLES, 
+    //     fullscreenQuad.m_geometry->m_indexBuffer->getCount(), 
+    //     GL_UNSIGNED_INT, 
+    //     0
+    // );
+
+    /* Use GL_TRIANGLE_STRIP, slightly more efficient */
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
