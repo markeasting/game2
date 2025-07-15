@@ -10,12 +10,13 @@
 struct RendererConfig {
 	bool wireframe = false;
 	bool useRenderpass = true;
+	std::vector<Ref<RenderPass>> renderPasses = {};
 };
 
 class Renderer {
 public:
 
- 	RendererConfig m_config;
+    RendererConfig m_config;
 
 	Renderer(RendererConfig config = {});
 

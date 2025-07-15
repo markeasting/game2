@@ -30,8 +30,7 @@ public:
         : RenderPass(
             Material(
                 ref<Shader>("Basic.vert", "renderpass/Bloom.frag"), {
-                    { "u_bloomThreshold", ref<Uniform<float>>(1.1f) },
-                    // { "u_bloomThreshold", ref<Uniform<float>>(0.0f) },
+                    { "u_bloomThreshold", uniform(1.1f) },
                 }
             ),
             RenderPassConfig {
@@ -96,11 +95,12 @@ public:
         m_pingpong2.setSize(width, height);
     }
 
-    // void bind(
-    //     const FrameBuffer& readBuffer
-    // ) override {
-    //     RenderPass::bind(readBuffer);
-    // }
+    void bind(
+        const FrameBuffer& cameraBuffer,
+        const FrameBuffer& prevPassBuffer
+    ) override {
+        RenderPass::bind(cameraBuffer, prevPassBuffer);
+    }
 
     void draw(
         Mesh& fullscreenQuad
@@ -160,9 +160,10 @@ public:
         );
 
         /* Bind u_bloomBuffer to texture unit 1 */
+        /* And bind the result of the blurred pingpong buffer */
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(
-            GL_TEXTURE_2D, pingpongBuffers[horizontal]
+            GL_TEXTURE_2D, pingpongBuffers[!horizontal]
         );
 
         /* Run the BloomComposite shader */

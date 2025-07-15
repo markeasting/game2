@@ -5,11 +5,6 @@
 #include "gameobject/GameObject.h"
 #include "component/Transform.h"
 
-#include "gfx/fxpass/BloomPass.h"
-#include "gfx/fxpass/FinalCompositePass.h"
-#include "gfx/fxpass/FogPass.h"
-#include "gfx/fxpass/SmearPass.h"
-
 Renderer::Renderer(RendererConfig config): 
     m_config(config)
 {
@@ -52,15 +47,10 @@ Renderer::Renderer(RendererConfig config):
         std::vector<unsigned int>{ 0, 1, 2, 2, 1, 3 }
     );
     
+    m_renderPasses = std::move(m_config.renderPasses); 
+    
     /* Check errors */
     CHECK_GL_ERROR_THROW();
-
-    m_renderPasses = {
-        ref<FogPass>(),
-        ref<BloomPass>(),
-        // ref<SmearPass>(),
-        // ref<FinalCompositePass>(),
-    };
 }
 
 void Renderer::setSize(
@@ -93,7 +83,10 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
 
     assert(camera != nullptr);
 
-    if (m_config.useRenderpass) {
+    /* static, evaluated only once */
+    static bool useRenderpass = m_config.useRenderpass && !m_renderPasses.empty();
+
+    if (useRenderpass) {
         camera->m_frameBuffer.bind();
     }
 
@@ -125,13 +118,13 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
         // mesh->unbind(); 
     }
 
-    if (m_config.useRenderpass) {
+    if (useRenderpass) {
 
         /* Setup state */
         glDisable(GL_DEPTH_TEST); // Disable depth test for the final pass
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Make sure 'wireframe' mode is disabled for the final pass
         glDisable(GL_CULL_FACE); // Not needed for fullscreen quad
-    
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Make sure 'wireframe' mode is disabled for the final pass
+        
         /* Draw the fullscreen quad with each render pass */
         m_fullscreenQuad.m_geometry->bind();
 
@@ -144,12 +137,11 @@ void Renderer::draw(std::vector<Ref<Mesh>> meshes, Ref<Camera> camera) {
              * On the first pass, use the camera's framebuffer.
              * After that, use the previous RenderPass framebuffer.
              */
-            if (i == 0) {
-                renderPass->bind({ camera->m_frameBuffer }); 
-            } else {
-                renderPass->bind(prevPass->m_frameBuffer);
-            }
-            
+            const auto& prevPassBuffer = (i == 0) 
+                ? camera->m_frameBuffer 
+                : m_renderPasses[i - 1]->m_frameBuffer;
+
+            renderPass->bind(camera->m_frameBuffer, prevPassBuffer);
             renderPass->draw(m_fullscreenQuad);
 
             CHECK_GL_ERROR_THROW();

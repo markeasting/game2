@@ -22,7 +22,8 @@ void RenderPass::setSize(
 };
 
 void RenderPass::bind(
-    const FrameBuffer& readBuffer
+    const FrameBuffer& cameraBuffer,
+    const FrameBuffer& prevPassBuffer
 ) {
     /* Bind the render pass draw framebuffer */
     // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_frameBuffer.getId());
@@ -48,9 +49,9 @@ void RenderPass::bind(
     /* Manually bind textures */
     m_material->setUniform("u_readBuffer", 0);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, readBuffer.getTexture());
+    glBindTexture(GL_TEXTURE_2D, prevPassBuffer.getTexture());
 
-    /* Bind the material - only update uniforms, without textures */
+    /* Bind the material - only update uniforms, don't overwrite textures */
     m_material->bind(false);
 
     CHECK_GL_ERROR();

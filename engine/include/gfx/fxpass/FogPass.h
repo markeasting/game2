@@ -10,44 +10,31 @@ public:
     FogPass()
         : RenderPass(
             Material(
-                ref<Shader>("Basic.vert", "renderpass/Fog.frag"), {
-                    { "u_fogStart", uniform(5.0f) },
-                    { "u_fogEnd", uniform(30.0f) },
+                ref<Shader>("Basic.vert", "renderpass/FogExp.frag"), {
                     { "u_fogColor", uniform(vec4(1.0f, 1.0f, 1.0f, 0.5f)) },
+                    { "u_fogDensity", uniform(0.03f) },
+                    // { "u_fogStart", uniform(5.0f) },
+                    // { "u_fogEnd", uniform(30.0f) },
                 }
             ),
             RenderPassConfig {
                 .autoClear = true
             },
             FrameBufferSettings {
-                .attachDefaultColorAttachment = false,
+                .attachDefaultColorAttachment = true,
                 .attachRenderBufferObject = false,
             }
         )
-    {
-        m_frameBuffer.addAttachment(
-            GL_COLOR_ATTACHMENT0,
-            GL_RGBA16F,
-            GL_RGBA,
-            GL_FLOAT
-        );
-
-        // Pass through buffer
-        // m_frameBuffer.addAttachment(
-        //     GL_COLOR_ATTACHMENT1,
-        //     GL_RED,
-        //     GL_RED,
-        //     GL_FLOAT
-        // );
-    }
+    {}
 
     void bind(
-        const FrameBuffer& readBuffer
+        const FrameBuffer& cameraBuffer,
+        const FrameBuffer& prevPassBuffer
     ) override {
-        RenderPass::bind(readBuffer);
+        RenderPass::bind(cameraBuffer, prevPassBuffer);
 
         m_material->setUniform("u_depth", 1);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, readBuffer.getDepthTexture());
+        glBindTexture(GL_TEXTURE_2D, cameraBuffer.getDepthTexture());
     }
 };

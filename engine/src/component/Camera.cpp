@@ -16,13 +16,8 @@ Camera::Camera(CameraSettings settings) : m_settings(settings) {
         // GL_FLOAT
     );
 
-    /* Depth buffer attachment (instead of an RBO to allow reading the texture data) */
-    m_frameBuffer.addAttachment(
-        GL_DEPTH_ATTACHMENT,
-        GL_DEPTH_COMPONENT24,
-        GL_DEPTH_COMPONENT,
-        GL_FLOAT
-    );
+    /* Depth buffer attachment (instead of an RBO to allow reading the texture) */
+    m_frameBuffer.addDepthAttachment();
 }
 
 Camera::~Camera() {}

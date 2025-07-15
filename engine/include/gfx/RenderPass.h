@@ -51,10 +51,12 @@ public:
 
     /**
      * @brief Binds the render pass framebuffer and sets up OpenGL state.
-     * @param readBuffer The FrameBuffer of the previous render pass. 
+     * @param cameraBuffer Camera buffer (initial render pass).
+     * @param prevPassBuffer Previous render pass buffer. 
      */
     virtual void bind(
-        const FrameBuffer& readBuffer
+        const FrameBuffer& cameraBuffer,
+        const FrameBuffer& prevPassBuffer
     );
 
     /** 
