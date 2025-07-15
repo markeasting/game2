@@ -42,13 +42,16 @@ void RenderPass::bind(
 
     CHECK_GL_ERROR();
 
-    /* Bind the material / shader without textures */
-    m_material->bind(false);
+    /* Bind shader */
+    m_material->m_shader->bind();
 
     /* Manually bind textures */
     m_material->setUniform("u_readBuffer", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, readBuffer.getTexture());
+
+    /* Bind the material - only update uniforms, without textures */
+    m_material->bind(false);
 
     CHECK_GL_ERROR();
 }

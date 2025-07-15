@@ -7,6 +7,7 @@
 
 #include "gfx/fxpass/BloomPass.h"
 #include "gfx/fxpass/FinalCompositePass.h"
+#include "gfx/fxpass/FogPass.h"
 #include "gfx/fxpass/SmearPass.h"
 
 Renderer::Renderer(RendererConfig config): 
@@ -55,8 +56,9 @@ Renderer::Renderer(RendererConfig config):
     CHECK_GL_ERROR_THROW();
 
     m_renderPasses = {
+        ref<FogPass>(),
         ref<BloomPass>(),
-        ref<SmearPass>(),
+        // ref<SmearPass>(),
         // ref<FinalCompositePass>(),
     };
 }

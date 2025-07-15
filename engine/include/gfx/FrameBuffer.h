@@ -108,6 +108,16 @@ public:
         bool andBindUnbind = true
     );
 
+    const FboAttachment& addDepthAttachment() {
+        return addAttachment(
+            GL_DEPTH_ATTACHMENT,
+            GL_DEPTH_COMPONENT,
+            GL_DEPTH_COMPONENT,
+            GL_FLOAT,
+            true
+        );
+    };
+
 protected:
 
     FrameBufferSettings m_settings;
