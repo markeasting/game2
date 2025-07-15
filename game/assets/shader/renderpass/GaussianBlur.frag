@@ -20,9 +20,9 @@ vec4 blur5(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
 void main()
 {             
     // vec2 tex_offset = 1.0 / textureSize(u_readBuffer, 0); // gets size of single texel
-    // vec2 resolution = vec2(textureSize(u_readBuffer, 0));
+    vec2 resolution = vec2(textureSize(u_readBuffer, 0));
 
-    vec2 resolution = vec2(768, 768); // @todo set as uniform
+    // vec2 resolution = vec2(768, 768); // @todo set as uniform
 
     FragColor = blur5(
         u_readBuffer, 
