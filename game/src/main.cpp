@@ -1,12 +1,16 @@
 #include <SDL2/SDL.h>
 
-#include "Car.h"
 #include "common/ref.h"
 #include "core/Window.h"
 #include "util/VectorMath.h"
 
 #include "gfx/Renderer.h"
 #include "gfx/CubeMapTexture.h"
+
+#include "gfx/fxpass/BloomPass.h"
+#include "gfx/fxpass/FinalCompositePass.h"
+#include "gfx/fxpass/FogPass.h"
+#include "gfx/fxpass/SmearPass.h"
 
 #include "geom/TetrahedronGeometry.h"
 #include "geom/PlaneGeometry.h"
@@ -18,9 +22,13 @@
 #include "gameobject/GameObject.h"
 #include "component/CameraController.h"
 
+// ImGui
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "backends/imgui_impl_opengl3.h"
+
+// Game-specific 
+#include "Car.h"
 
 int main() {
 
@@ -58,7 +66,13 @@ int main() {
         /* Initialize renderer */
         Renderer renderer = Renderer({
             .wireframe = false,
-            .useRenderpass = true
+            .useRenderpass = true,
+            .renderPasses = {
+                // ref<FogPass>(),
+                ref<BloomPass>(),
+                // ref<SmearPass>(),
+                // ref<FinalCompositePass>(),
+            }
         });
 
         renderer.setSize(
