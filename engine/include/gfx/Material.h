@@ -28,6 +28,11 @@ public:
         // std::cout << "[Material] Destroying material" << std::endl;
     };
 
+    /**
+     * @brief Set a uniform value.
+     * @note The uniform is saved, but only applied during the next bind() call 
+     * (e.g. when a new frame is drawn)
+     */
     template <typename T>
     void setUniform(const std::string& name, T value) {
 
