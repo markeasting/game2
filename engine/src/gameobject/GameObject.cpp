@@ -19,6 +19,7 @@ GameObject::GameObject(
 
 void GameObject::update(float time, float dt) {
     for (auto& component : m_components) {
+        if (!component->enabled) continue;
         component->update(time, dt);
     }
 }

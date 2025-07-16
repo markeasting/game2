@@ -12,6 +12,8 @@ public:
 
     GameObject* gameObject; // Parent object
 
+    bool enabled = true; // Whether the component is enabled
+
     virtual ~Component() = default;
 
     virtual void onCreate() {};
