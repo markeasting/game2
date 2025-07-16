@@ -33,7 +33,10 @@ void CameraController::update(float time, float dt) {
 
         camera->front = glm::normalize(m_lookAtPos - pos);
 
-    } else if (m_enableFreeCam) {
+        return;
+    }
+    
+    if (m_enableFreeCam) {
 
         float posDelta = m_speed; // * time.dt;
 
@@ -70,6 +73,10 @@ void CameraController::update(float time, float dt) {
         _front.z = sin(glm::radians(m_eulerRotation.x)) * cos(glm::radians(m_eulerRotation.y));
 
         camera->front = glm::normalize(_front);
+    } else {
+        camera->front = glm::normalize(m_lookAtPos - pos);
+        camera->right = glm::normalize(glm::cross(camera->front, vec3(0.0f, 1.0f, 0.0f)));
+        camera->up = glm::normalize(glm::cross(camera->right, camera->front));
     }
 
     // m_camera->updateMatrix();

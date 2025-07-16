@@ -24,5 +24,9 @@ public:
     CameraController() = default;
     ~CameraController() = default;
 
+    void lookAt(const vec3& pos) {
+        m_lookAtPos = pos;
+    }
+
     void update(float time, float dt) override;
 };
