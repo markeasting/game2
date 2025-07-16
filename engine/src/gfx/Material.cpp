@@ -66,6 +66,20 @@ void Material::assignTexture(
     this->assignTexture(texture, uniform);
 }
 
+void Material::setTexture(
+    const std::string& uniform,
+    GLenum textureUnit,
+    GLuint texture
+) {
+    const auto& uni = getUniform<int>(uniform, true);
+
+    uni->set((int) (textureUnit - GL_TEXTURE0));
+    uni->bind(); // Also uploads the value to the shader.
+
+    glActiveTexture(textureUnit);
+    glBindTexture(GL_TEXTURE_2D, texture);
+}
+
 void Material::bind(bool bindTextures) const {
 
     m_shader->bind(); // glUseProgram()
