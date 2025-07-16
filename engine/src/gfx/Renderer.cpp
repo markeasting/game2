@@ -193,11 +193,23 @@ void Renderer::drawMesh(Ref<Mesh> mesh, Ref<Camera> camera) {
             glm::mat4(glm::mat3(camera->m_viewMatrix))
         );
 
+        if (auto camTrans = camera->gameObject->tryGetComponent<Transform>()) {
+            mesh->m_material->setUniform(
+                "u_camPos", 
+                camTrans->getPosition()
+            );
+        }
+
         // @TODO premature optimization is <...>
         // Maybe just go back to separate m * v * p
         mesh->m_material->setUniform(
             "u_projectionMatrix", 
             camera->m_projectionMatrix
+        );
+
+        mesh->m_material->setUniform(
+            "u_modelMatrix", 
+            matrix
         );
 
         mesh->m_material->setUniform(
