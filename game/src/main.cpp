@@ -356,13 +356,32 @@ int main() {
                 Shader::refreshAll();
             }
 
-            // if (ImGui::Button("Free cam")) {
-            //     // camController->m_enableFreeCam = !camController->m_enableFreeCam;
-            //     // camController->m_autoRotate = false; // disable auto-rotate when switching to free cam
-            // }
+            ImGui::Separator();
 
             ImGui::Checkbox("Auto-rotate", &camController->m_autoRotate);
             ImGui::Checkbox("Free cam", &camController->m_enableFreeCam);
+            ImGui::SliderFloat("Camera speed", &camController->m_speed, 0.1f, 10.0f);
+            
+            ImGui::Separator();
+
+            auto grip = player.m_wheels[0]->m_grip;
+            if (ImGui::SliderFloat("Grip", &grip, 0.0f, 2000.0f)) {
+                car.setGrip(grip);
+            }
+
+            auto stiffness = player.m_wheels[0]->m_stiffness;
+            if (ImGui::SliderFloat("Stiffness", &stiffness, 1000.0f, 20000.0f)) {
+                car.setSpringStiffness(stiffness);
+            }
+
+            auto damping = player.m_wheels[0]->m_damping;
+            if (ImGui::SliderFloat("Damping", &damping, 0.0f, 1000.0f)) {
+                car.setDamping(damping);
+            }
+
+            ImGui::Separator();
+            auto colorUni = colorMaterial2.getUniform<vec4>("u_color");
+            ImGui::ColorEdit4("Color", &colorUni->m_value[0], ImGuiColorEditFlags_HDR);
 
             ImGui::End();
             ImGui::Render();
