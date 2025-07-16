@@ -23,6 +23,7 @@ void CameraController::update(float time, float dt) {
     /* @todo add 'mode' enum instead of booleans */
     if (m_autoRotate) {
 
+        m_lookAtPos = vec3(0.0f, 0.0f, 0.0f);
         // m_camRadius = glm::distance(m_position, m_lookAtPos);
 
         pos.x = sin(time) * m_camRadius;
