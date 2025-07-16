@@ -3,6 +3,7 @@
 
 #include "gameobject/GameObject.h"
 #include "geom/PlaneGeometry.h"
+#include "gfx/CubeMapTexture.h"
 #include "gfx/Material.h"
 #include "phys/PhysicsHandler.h"
 
@@ -181,6 +182,23 @@ Car::Car(PhysicsHandler& phys): m_phys(phys) {
 
     auto basicShader = ref<Shader>("Basic.vert", "BasicTextured.frag");
     auto phongShader = ref<Shader>("Phong.vert", "Phong.frag");
+    auto phongMaterial = Material(phongShader, {
+        { "u_lightDirection", lightDirection },
+        { "ambient", uniform(vec3(0.0, 0.0, 0.2)) },
+        { "diffuseAlbedo", uniform(vec3(0.1)) }
+    });
+
+    // Material skyMaterial = Material(ref<Shader>("SkyBox"));
+    Ref<CubeMapTexture> skyTexture = ref<CubeMapTexture>();
+    skyTexture->loadCubemap({
+        "assets/texture/skybox/right.jpg",
+        "assets/texture/skybox/left.jpg",
+        "assets/texture/skybox/bottom.jpg",
+        "assets/texture/skybox/top.jpg",
+        "assets/texture/skybox/front.jpg",
+        "assets/texture/skybox/back.jpg"
+    });
+    phongMaterial.assignTexture(skyTexture, "u_cubemap");
 
     Material shadowMaterial = Material(basicShader, {
         { "u_opacity", uniform(1.0f) },
@@ -197,7 +215,7 @@ Car::Car(PhysicsHandler& phys): m_phys(phys) {
     m_body = ref<GameObject>("CarBody", std::vector<Ref<Component>>{
         ref<Mesh>(
             car,
-            Material(phongShader, { { "u_lightDirection", lightDirection } })
+            phongMaterial
         ),
         ref<RigidBody>(
             ref<MeshCollider>(car_collider)
