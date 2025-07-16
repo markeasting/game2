@@ -118,6 +118,30 @@ public:
         return body->velocity();
     }
 
+    void setGrip(float grip) {
+        for (auto& wheel : m_wheels) {
+            wheel->m_grip = grip;
+        }
+    }
+
+    void setSpringLength(float length) {
+        for (auto& wheel : m_wheels) {
+            wheel->m_springLength = length;
+        }
+    }
+
+    void setSpringStiffness(float force) {
+        for (auto& wheel : m_wheels) {
+            wheel->m_stiffness = force;
+        }
+    }
+
+    void setDamping(float damping) {
+        for (auto& wheel : m_wheels) {
+            wheel->m_damping = damping;
+        }
+    }
+
 // private:
 
     PhysicsHandler& m_phys;
