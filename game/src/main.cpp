@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL_scancode.h>
 
 #include "common/ref.h"
 #include "core/Window.h"
@@ -29,6 +30,10 @@
 
 // Game-specific 
 #include "Car.h"
+
+void _lerp(float& value, float target, float factor = 0.98) {
+    value = std::lerp(value, target, factor);
+}
 
 int main() {
 
@@ -157,8 +162,6 @@ int main() {
         gameObjects.push_back(skybox);
 
         /* Physics bodies */
-        Ref<RigidBody> player = nullptr;
-
         const float size = 0.5f;
         for (size_t i = 0; i < 4; i++) {
 
@@ -179,7 +182,6 @@ int main() {
 
             if (i == 0) {
                 box->getComponent<Mesh>()->setMaterial(colorMaterial2);
-                player = body;
             }
         }
 
@@ -197,6 +199,7 @@ int main() {
 
         /* Car */
         auto car = Car(phys);
+        auto& player = car;
         auto carBody = car.m_body->getComponent<RigidBody>();
         // phys.add(car.m_body->getComponent<RigidBody>());
 
@@ -243,7 +246,8 @@ int main() {
                     std::cout << "Mouse button pressed: " << e.button.button << std::endl;
 
                     if (e.button.button == SDL_BUTTON_LEFT) {
-                        camController->m_autoRotate = !camController->m_autoRotate;
+                        // camController->m_autoRotate = !camController->m_autoRotate;
+                        // camController->m_enableFreeCam = !camController->m_enableFreeCam;
                     }
                 
                 } else if (e.type == SDL_WINDOWEVENT) {
@@ -270,6 +274,8 @@ int main() {
 
             if (state[SDL_SCANCODE_SPACE])
                 carBody->applyForce(vec3(0.0f, 10000.0f, 0.0f), carBody->pose.p);
+            if (state[SDL_SCANCODE_ESCAPE])
+                camController->m_enableFreeCam = false;
             if (state[SDL_SCANCODE_J])
                 carBody->applyForce(vec3(-250.0f, 0.0f, 0.0f), carBody->pose.p);
             if (state[SDL_SCANCODE_L])
@@ -284,6 +290,43 @@ int main() {
 
             tetra->m_transform->setPosition({ 0.0f, 1.0f + osc, -2.0f });
             tetra->m_transform->setRotation(vec3(0.0f, time * 50.0f, 0.0f));
+
+            /* Player controls */
+            if (!camController->m_enableFreeCam && !camController->m_autoRotate) {
+                // camController->m_lookAtPos = player.m_body->localToWorld(player.m_camLookPos);
+                // camController->setPosition(player.m_body->localToWorld(player.m_camPos));
+                camController->lookAt(player.m_camLookPos);
+                cameraObject->m_transform->setPosition(player.m_camPos);
+
+                // if (Gamepad::m_active) {
+                //     player.applySteering(Gamepad::m_axes[0]);
+                //     player.applyThrottle(-Gamepad::m_axes[3]);
+                // }
+
+                if (state[SDL_SCANCODE_W]) {
+                    _lerp(player.m_throttle, 1.0f, 0.15f);
+                } else if (state[SDL_SCANCODE_S]) {
+                    _lerp(player.m_throttle, -1.0f, 0.15f);
+                } else {
+                    _lerp(player.m_throttle, 0.0f, 0.15f);
+                }
+
+                if (state[SDL_SCANCODE_A]) {
+                    _lerp(player.m_steering, -1.0f, (clamp(player.getLinearVelocity() / 50.0f, 0.09f, 0.15f)));
+                } else if (state[SDL_SCANCODE_D]) {
+                    _lerp(player.m_steering, 1.0f, (clamp(player.getLinearVelocity() / 50.0f, 0.09f, 0.15f)));
+                } else {
+                    _lerp(player.m_steering, 0.0f, (clamp(player.getLinearVelocity() / 50.0f, 0.09f, 0.15f)));
+                }
+
+                player.m_handbrake = state[SDL_SCANCODE_B] == true; // || Gamepad::isButtonPressed(SDL_CONTROLLER_BUTTON_B);
+
+                // if (Keyboard::a) 
+                //     player.applySteering(-1.0f);
+                // if (Keyboard::d) 
+                //     player.applySteering(1.0f);
+            }
+
 
             /* Core update */
             phys.update(dt, [&](float h) {
@@ -313,6 +356,14 @@ int main() {
                 Shader::refreshAll();
             }
 
+            // if (ImGui::Button("Free cam")) {
+            //     // camController->m_enableFreeCam = !camController->m_enableFreeCam;
+            //     // camController->m_autoRotate = false; // disable auto-rotate when switching to free cam
+            // }
+
+            ImGui::Checkbox("Auto-rotate", &camController->m_autoRotate);
+            ImGui::Checkbox("Free cam", &camController->m_enableFreeCam);
+
             ImGui::End();
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -327,4 +378,3 @@ int main() {
 
     return 0;
 }
-

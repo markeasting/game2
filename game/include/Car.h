@@ -113,6 +113,11 @@ public:
     void applyThrottle(float throttle);
     void applySteering(float steering);
 
+    const float getLinearVelocity() {
+        auto body = m_body->getComponent<RigidBody>();
+        return body->velocity();
+    }
+
 // private:
 
     PhysicsHandler& m_phys;
