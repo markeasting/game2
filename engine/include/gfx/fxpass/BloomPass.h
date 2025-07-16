@@ -146,24 +146,21 @@ public:
          * Now we composite the blurred result with the underlying colors 
          * by binding the main framebuffer and using the composite shader.
          */
-
         m_frameBuffer.bind();
-        
         m_compositeMaterial->bind();
-        m_compositeMaterial->setUniform("u_readBuffer", 0);
-        m_compositeMaterial->setUniform("u_bloomBuffer", 1); // Texture unit 1
 
         /* Bind u_readBuffer to texture unit 1 */
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(
-            GL_TEXTURE_2D, m_frameBuffer.getTexture()
+        m_compositeMaterial->setTexture(
+            "u_readBuffer", 
+            GL_TEXTURE0, 
+            m_frameBuffer.getTexture()
         );
 
-        /* Bind u_bloomBuffer to texture unit 1 */
-        /* And bind the result of the blurred pingpong buffer */
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(
-            GL_TEXTURE_2D, pingpongBuffers[!horizontal]
+        /* Bind u_bloomBuffer (result from pingpong / blur buffer) to texture unit 1 */
+        m_compositeMaterial->setTexture(
+            "u_bloomBuffer", 
+            GL_TEXTURE1, 
+            pingpongBuffers[!horizontal]
         );
 
         /* Run the BloomComposite shader */

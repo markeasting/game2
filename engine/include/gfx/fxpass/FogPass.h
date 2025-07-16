@@ -33,8 +33,10 @@ public:
     ) override {
         RenderPass::bind(cameraBuffer, prevPassBuffer);
 
-        m_material->setUniform("u_depth", 1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, cameraBuffer.getDepthTexture());
+        m_material->setTexture(
+            "u_depth", 
+            GL_TEXTURE1, 
+            cameraBuffer.getDepthTexture()
+        );
     }
 };
