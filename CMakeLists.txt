@@ -4,7 +4,7 @@ project(game VERSION 1.0)
 
 # Defines
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 # set(CMAKE_BUILD_TYPE DEBUG)
 # set(CMAKE_OSX_ARCHITECTURES "arm64") # Apple Silicon support - might not be needed
 
